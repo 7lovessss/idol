@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IDOL SIM · 爱豆模拟器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314151C'/%3E%3Cpath d='M11 8h10v14a5 5 0 0 1-10 0z' fill='%23FF3D77'/%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#F4F2EC;
+  --ink:#14151C;
+  --ink2:#4A4C58;
+  --mute:#8B8A86;
+  --line:#DCD8CC;
+  --pink:#FF3D77;
+  --pink-deep:#D42256;
+  --card:#FFFDF7;
+  --gold:#B98A2E;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink);
+  font-family:"PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{min-height:100svh;line-height:1.6}
+button,input{font-family:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 18px 70px}
+.view{display:none}
+.view.active{display:block}
+
+/* ---------- 通用 ---------- */
+.eyebrow{font-size:10.5px;letter-spacing:.22em;color:var(--mute);text-transform:uppercase}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.hr{height:1px;background:var(--line);margin:22px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:3px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:50px;padding:0 22px;background:var(--ink);color:var(--paper);
+  font-size:14px;font-weight:600;letter-spacing:.04em;border-radius:2px;
+  transition:transform .12s ease,background .18s ease;
+}
+.btn:hover{background:#000}
+.btn:active{transform:scale(.98)}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.pink:hover{background:var(--pink-deep)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn.ghost:hover{background:rgba(20,21,28,.05)}
+.btn:disabled{background:#E5E2D8;color:#A5A29A;cursor:not-allowed;transform:none}
+.btn.sm{height:38px;padding:0 14px;font-size:12.5px}
+
+/* ---------- 开屏：K-POP 舞台 ---------- */
+body.dark{background:#07070A}
+#v-start{margin:0 -18px;padding:0 18px;background:#07070A}
+.kp{
+  position:relative;min-height:100svh;display:flex;flex-direction:column;
+  padding:24px 0 34px;overflow:hidden;color:#F4F2EE
+}
+.kp::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(58% 38% at 82% 4%,rgba(255,45,135,.55),rgba(255,45,135,0) 70%),
+    radial-gradient(52% 42% at 4% 26%,rgba(104,74,255,.5),rgba(104,74,255,0) 72%),
+    radial-gradient(70% 45% at 50% 104%,rgba(0,196,255,.2),rgba(0,196,255,0) 70%);
+}
+.kp::after{
+  content:"";position:absolute;left:-20%;right:-20%;top:-26%;height:78%;pointer-events:none;
+  background:conic-gradient(from 196deg at 50% 0%,transparent 0deg,rgba(255,255,255,.08) 7deg,transparent 15deg,transparent 178deg,rgba(255,255,255,.06) 186deg,transparent 196deg);
+  filter:blur(1.5px)
+}
+.kp-grain{
+  position:absolute;inset:0;pointer-events:none;opacity:.28;
+  background-image:radial-gradient(rgba(255,255,255,.35) .5px,transparent .5px);
+  background-size:3px 3px;
+}
+.kp-top{position:relative;z-index:2;display:flex;justify-content:space-between;gap:10px;
+  font-size:9px;letter-spacing:.26em;color:rgba(244,242,238,.5);text-transform:uppercase}
+.kp-title{position:relative;z-index:2;margin-top:34px}
+.kp-title .big{
+  font-size:clamp(78px,26vw,158px);line-height:.79;font-weight:900;letter-spacing:-.075em;
+  background:linear-gradient(178deg,#FFFFFF 0%,#E8EAF2 32%,#8E93A6 52%,#FFFFFF 68%,#B9BFD0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 26px rgba(255,45,135,.35));
+}
+.kp-title .kr{margin-top:16px;font-size:11px;letter-spacing:.32em;color:rgba(244,242,238,.6)}
+.kp-sub{position:relative;z-index:2;margin-top:24px;max-width:20em;
+  font-size:13.5px;line-height:1.95;color:rgba(244,242,238,.72)}
+
+.kp-cards{position:relative;z-index:2;margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pcard{
+  position:relative;text-align:left;padding:0;overflow:hidden;border-radius:6px;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.045);
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+.pcard:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.45);box-shadow:0 22px 46px -28px rgba(255,45,135,.9)}
+.pcard .art{position:relative;height:118px;display:grid;place-items:center;overflow:hidden}
+.pcard.a .art{background:radial-gradient(130% 110% at 18% -10%,#FF2D87 0%,#8A2BE2 52%,#1B0A2B 100%)}
+.pcard.b .art{background:radial-gradient(130% 110% at 82% -10%,#00D4FF 0%,#2A4BFF 52%,#070F26 100%)}
+.pcard .art::after{
+  content:"";position:absolute;inset:0;mix-blend-mode:overlay;opacity:.4;
+  background-image:radial-gradient(rgba(255,255,255,.7) 1px,transparent 1px);background-size:6px 6px
+}
+.pcard .no{position:relative;z-index:2;font-size:50px;font-weight:900;letter-spacing:-.07em;color:#fff;
+  text-shadow:0 6px 28px rgba(0,0,0,.5)}
+.pcard .tt{position:absolute;left:10px;bottom:8px;z-index:2;font-size:8.5px;letter-spacing:.22em;color:rgba(255,255,255,.82)}
+.pcard .tx{padding:11px 12px 13px}
+.pcard .tx b{display:block;font-size:14.5px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.pcard .tx small{display:block;margin-top:5px;font-size:10.5px;line-height:1.65;color:rgba(244,242,238,.55)}
+.pcard .go{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:9.5px;letter-spacing:.16em;color:#FF6EA8}
+.pcard.b .go{color:#5FE3FF}
+.kp-meta{position:relative;z-index:2;margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;
+  font-size:9.5px;letter-spacing:.14em;color:rgba(244,242,238,.42)}
+.kp-meta b{display:block;margin-top:4px;font-size:16px;font-weight:700;letter-spacing:-.01em;color:#F4F2EE}
+.kp-foot{position:relative;z-index:2;margin-top:auto;padding-top:26px;display:flex;gap:8px;flex-wrap:wrap}
+.btn.dk{background:transparent;border:1px solid rgba(255,255,255,.26);color:#F4F2EE}
+.btn.dk:hover{background:rgba(255,255,255,.1)}
+
+/* ---------- 选角 ---------- */
+.setup-head{padding:44px 0 0}
+.setup-head h2{font-size:clamp(30px,8vw,44px);line-height:1.08;font-weight:800;letter-spacing:-.035em}
+.setup-head p{margin-top:12px;color:var(--ink2);font-size:13.5px;max-width:26em;line-height:1.85}
+.block{margin-top:34px}
+.block-label{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:12px}
+.block-label i{flex:1;height:1px;background:var(--line);display:block}
+.opt-list{display:grid;gap:8px}
+.opt{
+  text-align:left;padding:15px 16px;background:var(--card);border:1px solid var(--line);border-radius:2px;
+  display:flex;align-items:center;gap:14px;transition:all .16s ease
+}
+.opt:hover{border-color:#B9B4A6}
+.opt.on{border-color:var(--ink);background:#FFF;box-shadow:inset 3px 0 0 var(--pink)}
+.opt .k{font-size:13.5px;font-weight:600}
+.opt .d{font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.6}
+.opt .mk{width:16px;height:16px;border:1px solid #C6C2B5;border-radius:50%;flex:0 0 auto}
+.opt.on .mk{border-color:var(--pink);background:var(--pink);box-shadow:inset 0 0 0 3px var(--card)}
+.name-input{
+  width:100%;height:52px;padding:0 15px;background:var(--card);border:1px solid var(--line);
+  font-size:16px;letter-spacing:.02em;border-radius:2px
+}
+.name-input:focus{outline:none;border-color:var(--ink)}
+.setup-cta{margin-top:38px}
+.hint{font-size:11.5px;color:var(--mute);margin-top:10px}
+
+/* ---------- 游戏主界面 ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(244,242,236,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);margin:0 -18px;padding:0 18px}
+.topbar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px;gap:12px}
+.tb-left{display:flex;align-items:baseline;gap:9px;min-width:0}
+.tb-left b{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.tb-left span{font-size:10.5px;letter-spacing:.14em;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.ap{display:flex;gap:4px;align-items:center}
+.ap i{width:9px;height:9px;border-radius:50%;background:var(--pink);display:block}
+.ap i.off{background:#D8D4C8}
+
+.panel{padding-top:22px}
+.weekrow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.weekrow .w{font-size:11px;letter-spacing:.18em;color:var(--mute)}
+.weekrow .big{font-size:44px;font-weight:800;line-height:.9;letter-spacing:-.04em}
+.weekrow .big small{font-size:13px;font-weight:600;letter-spacing:0;color:var(--mute);margin-left:4px}
+.weekrow .money{text-align:right}
+.weekrow .money b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.weekrow .money span{font-size:10.5px;letter-spacing:.12em;color:var(--mute)}
+
+.stats{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.stat{min-width:0}
+.stat .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.stat .n{font-size:11px;letter-spacing:.12em;color:var(--ink2)}
+.stat .v{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .bar{height:5px;margin-top:6px;background:#E4DFD3;overflow:hidden;border-radius:1px}
+.stat .bar i{display:block;height:100%;background:var(--ink);transition:width .35s cubic-bezier(.2,.8,.3,1)}
+.stat .bar i.pink{background:var(--pink)}
+.stat .bar i.gold{background:var(--gold)}
+.stat .bar i.blue{background:#4B57A8}
+
+.lover-strip{margin-top:16px;padding:13px 15px;border:1px solid var(--line);background:var(--card);
+  display:flex;align-items:center;gap:12px;border-radius:2px}
+.lover-strip .h{width:26px;height:26px;flex:0 0 auto}
+.lover-strip .tx{min-width:0;flex:1}
+.lover-strip b{font-size:13px}
+.lover-strip small{display:block;font-size:11px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lover-strip .risk{font-size:10.5px;letter-spacing:.1em;color:var(--pink-deep);flex:0 0 auto}
+
+.sect{margin-top:28px}
+.sect-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sect-h h4{font-size:12px;letter-spacing:.16em;color:var(--mute);font-weight:600}
+.sect-h em{font-style:normal;font-size:11px;color:var(--mute)}
+
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act{
+  position:relative;text-align:left;padding:13px 13px 12px;background:var(--card);
+  border:1px solid var(--line);border-radius:2px;transition:all .16s ease;min-height:86px;
+  display:flex;flex-direction:column;justify-content:space-between
+}
+.act:hover:not(:disabled){border-color:var(--ink);transform:translateY(-1px)}
+.act:disabled{opacity:.42;cursor:not-allowed}
+.act .an{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.act .ad{font-size:11px;color:var(--mute);line-height:1.55;margin-top:4px}
+.act .ac{position:absolute;right:10px;top:11px;font-size:9.5px;letter-spacing:.08em;color:#A9A69C}
+.act .ac.hot{color:var(--pink-deep)}
+.act .chev{font-size:15px;color:#C9C4B6;line-height:1}
+
+.members{display:grid;gap:8px}
+.mem{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--card);border:1px solid var(--line);border-radius:2px}
+.mem .av{width:34px;height:34px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-size:12px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.mem .mi{min-width:0;flex:1}
+.mem .mt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mem .mt b{font-size:13px}
+.mem .mt small{font-size:10px;color:var(--mute);letter-spacing:.08em}
+.mem .bar{height:4px;margin-top:6px;background:#E7E2D6;border-radius:1px;overflow:hidden}
+.mem .bar i{display:block;height:100%;background:#4B57A8;transition:width .3s ease}
+.mem .mood{margin-top:5px;font-size:10.5px;color:var(--mute)}
+
+.log{margin-top:12px;border-top:1px solid var(--line)}
+.logi{padding:11px 0;border-bottom:1px solid #E7E3D7;display:flex;gap:10px;font-size:12.5px;line-height:1.7;
+  animation:fin .35s ease both}
+.logi .t{flex:0 0 44px;font-size:10px;letter-spacing:.08em;color:var(--mute);padding-top:3px}
+.logi .m{flex:1;color:var(--ink2)}
+.logi .m b{color:var(--ink)}
+.logi.hot .m b{color:var(--pink-deep)}
+@keyframes fin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.bottom-bar{margin-top:30px;display:flex;gap:10px}
+.bottom-bar .btn{flex:1}
+
+/* ---------- 弹窗 ---------- */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(15,16,22,.55);backdrop-filter:blur(3px);
+  display:none;align-items:flex-end;justify-content:center;padding:0}
+.scrim.on{display:flex}
+.sheet{
+  width:100%;max-width:560px;background:var(--paper);border-radius:8px 8px 0 0;
+  padding:26px 20px calc(24px + env(safe-area-inset-bottom));max-height:88svh;overflow:auto;
+  animation:up .32s cubic-bezier(.2,.9,.3,1)
+}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.sheet .st{font-size:10.5px;letter-spacing:.2em;color:var(--pink-deep)}
+.sheet h3{margin-top:10px;font-size:23px;line-height:1.3;font-weight:800;letter-spacing:-.03em}
+.sheet .body{margin-top:14px;font-size:13.5px;line-height:1.9;color:var(--ink2)}
+.sheet .opt-list{margin-top:22px}
+.sheet .close{margin-top:10px;font-size:12px;color:var(--mute);text-align:center;width:100%;padding:12px}
+.result-line{margin-top:16px;padding:12px 14px;border-left:2px solid var(--pink);background:rgba(255,61,119,.06);
+  font-size:12.5px;line-height:1.8;display:none}
+.result-line.on{display:block}
+
+/* ---------- 结局 ---------- */
+.end{padding:60px 0 30px}
+.end-k{font-size:11px;letter-spacing:.2em;color:var(--mute)}
+.end h1{margin-top:14px;font-size:clamp(38px,11vw,64px);line-height:.98;font-weight:800;letter-spacing:-.045em}
+.end h1 em{font-style:normal;color:var(--pink)}
+.end .rank{margin-top:26px;display:flex;align-items:baseline;gap:10px}
+.end .rank b{font-size:78px;line-height:1;font-weight:800;letter-spacing:-.06em}
+.end .rank span{font-size:12px;color:var(--mute);letter-spacing:.1em}
+.end p.txt{margin-top:18px;font-size:14px;line-height:2;color:var(--ink2);max-width:30em}
+.end-stats{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.end-stats div{background:var(--card);padding:13px 14px}
+.end-stats span{font-size:10.5px;letter-spacing:.12em;color:var(--mute)}
+.end-stats b{display:block;font-size:20px;font-weight:700;margin-top:4px;letter-spacing:-.02em}
+.end-cta{margin-top:32px;display:grid;gap:10px}
+
+.gallery{margin-top:26px}
+.g-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px}
+.g-item .dot{width:8px;height:8px;border-radius:50%;background:var(--pink);flex:0 0 auto}
+.g-item.locked{color:#B7B4AA}
+.g-item.locked .dot{background:#D8D4C8}
+.g-item small{margin-left:auto;font-size:10.5px;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:80;background:var(--ink);color:#fff;
+  padding:11px 18px;border-radius:2px;font-size:12.5px;opacity:0;pointer-events:none;transition:all .25s ease;max-width:86vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(min-width:640px){
+  .acts{grid-template-columns:repeat(3,1fr)}
+  .stats{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body class="dark">
+
+<div class="wrap">
+  <!-- ========== 开屏 ========== -->
+  <section class="view active" id="v-start">
+    <div class="kp">
+      <div class="kp-grain" aria-hidden="true"></div>
+      <div class="kp-top">
+        <span>IDOL SIM</span><span>VOL.01</span><span>36 WEEKS</span>
+      </div>
+
+      <div class="kp-title">
+        <div class="big">IDOL<br>SIM</div>
+        <div class="kr">아이돌 시뮬레이터 · 爱豆模拟器</div>
+      </div>
+
+      <p class="kp-sub">从练习室的镜子前，到打歌舞台的灯牌海。<br>你要成为被爱的那一个，还是决定谁值得被爱？</p>
+
+      <div class="kp-cards">
+        <button class="pcard a" onclick="goSetup('idol')">
+          <div class="art"><span class="no">01</span><span class="tt">DEBUT / IDOL</span></div>
+          <div class="tx"><b>成为爱豆</b><small>练习生或直接出道<br>打歌 · 签售 · 巡演 · 私生</small><span class="go">选择路线 →</span></div>
+        </button>
+        <button class="pcard b" onclick="goSetup('manager')">
+          <div class="art"><span class="no">02</span><span class="tt">MANAGER / TEAM</span></div>
+          <div class="tx"><b>成为经纪人</b><small>带一支四人新团<br>排期 · 公关 · 拆散恋爱</small><span class="go">选择路线 →</span></div>
+        </button>
+      </div>
+
+      <div class="kp-meta">
+        <div>结局<b>16 种</b></div>
+        <div>行动点<b>2–3 / 周</b></div>
+        <div>存档<b>自动</b></div>
+      </div>
+
+      <div class="kp-foot">
+        <button class="btn dk sm" onclick="openGallery()">结局图鉴</button>
+        <button class="btn dk sm" onclick="loadSave()">继续上一局</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 选角 ========== -->
+  <section class="view" id="v-setup">
+    <div class="setup-head">
+      <div class="serial" id="setup-kicker">ROUTE A</div>
+      <h2 id="setup-title">你要怎么出道</h2>
+      <p id="setup-desc">练习生的路慢但底子扎实；直接出道起点高，代价是根基浅。</p>
+    </div>
+    <div id="setup-body"></div>
+    <div class="setup-cta">
+      <button class="btn pink" id="setup-start" onclick="startGame()" style="width:100%">开始第 1 周</button>
+      <div class="hint" id="setup-hint"></div>
+    </div>
+  </section>
+
+  <!-- ========== 游戏 ========== -->
+  <section class="view" id="v-game">
+    <div class="topbar">
+      <div class="topbar-in">
+        <div class="tb-left">
+          <b id="gb-name">—</b>
+          <span id="gb-sub">—</span>
+        </div>
+        <div class="tb-right">
+          <div class="ap" id="gb-ap"></div>
+        <button class="btn ghost sm" onclick="quitToStart()" style="height:32px;padding:0 10px">结束</button>
+        </div>
+      </div>
+    </div>
+    <div id="game-body"></div>
+  </section>
+
+  <!-- ========== 结局 ========== -->
+  <section class="view" id="v-end">
+    <div class="end" id="end-body"></div>
+    <div class="gallery" id="end-gallery"></div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this) closeSheet()">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 基础 ================= */
+var MAXW = 36;
+var $ = function(id){ return document.getElementById(id); };
+var S = null;
+var curEv = null;
+
+function clamp(v, a, b){ a = (a===undefined?0:a); b = (b===undefined?100:b); return Math.max(a, Math.min(b, v)); }
+function rnd(a, b){ return Math.round(a + Math.random() * (b - a)); }
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.classList.remove('on'); }, 2100);
+}
+
+/* ================= 选项数据 ================= */
+var POSITIONS = [
+  { id:'vocal',  name:'主唱',     desc:'现场稳、音源吃香，回归加成高', tag:'VOCAL' },
+  { id:'dance',  name:'主舞',     desc:'舞台抓眼，直拍容易出圈',     tag:'DANCE' },
+  { id:'visual', name:'门面',     desc:'话题体质，商务代言多',       tag:'VISUAL' },
+  { id:'variety',name:'综艺担当', desc:'嘴上功夫，口碑更耐用',       tag:'TALK' },
+  { id:'leader', name:'队长',     desc:'公司更信你，也更容易被牵连', tag:'LEAD' }
+];
+
+var STYLES = [
+  { id:'strict', name:'严格型', desc:'行程排满、标准很高，成绩快但人心散' },
+  { id:'soft',   name:'温柔型', desc:'护着他们，进度慢一点但你说了话有人听' },
+  { id:'loose',  name:'放任型', desc:'给自由，出事的时候才会想起来找你' }
+];
+
+var LOVERS = [
+  { id:'shen', name:'沈牧言', tag:'同团队长 · 温柔得体', mult:1.2 },
+  { id:'lu',   name:'陆星野', tag:'同团忙内 · 黏人爱撒娇', mult:1.35 },
+  { id:'jiang',name:'江迟',   tag:'别团顶流 · 被拍到就完', mult:1.8 },
+  { id:'zhou', name:'周叙',   tag:'你的经纪人 · 越界的关心', mult:1.7 }
+];
+
+var NAMES_A = ['林知夏','姜予安','徐念','宋昭','沈栖','余星野','许清和','白露'];
+var NAMES_B = ['周叙','陈嘉许','江迟','言澈','顾南舟','裴行','陆见','李亦'];
+
+/* ================= 结局表 ================= */
+var ENDINGS = {
+  'i-super':  { name:'顶流',       rank:'S', route:'idol',    txt:'机场需要护栏，代言排到明年。你终于成了那种，站在台上就有人替你哭的人。' },
+  'i-fall':   { name:'塌房',       rank:'D', route:'idol',    txt:'热搜挂了两天。你握着手机，第一次发现没有人能够解释清楚一件事。' },
+  'i-freeze': { name:'雪藏',       rank:'D', route:'idol',    txt:'没有行程的第三个月，你还在练习室打卡。公司只是不再回你消息。' },
+  'i-love':   { name:'因爱退圈',   rank:'C', route:'idol',    txt:'你在手写信里写下「我想过普通人的生活」。粉丝说祝福，也有人说你辜负了她们。' },
+  'i-solo':   { name:'单飞',       rank:'A', route:'idol',    txt:'解约那天你走出大楼，风很大。你终于可以不用再和任何人分享舞台。' },
+  'i-steady': { name:'稳定活动家', rank:'B', route:'idol',    txt:'不算顶流，但每年都有回归、有演唱会、有等着你的人。这也是一种赢。' },
+  'm-legend': { name:'天团制作人', rank:'S', route:'manager', txt:'他们四个人的名字被写进那年的年度总结。没人记得是谁排的行程。' },
+  'm-fire':   { name:'被撤职',     rank:'D', route:'manager', txt:'总部发来一封很客气的邮件。你收拾桌面的时候，团员们都不敢看你。' },
+  'm-collapse':{name:'团体解散',   rank:'C', route:'manager', txt:'最后一次见面在会议室。有人说「我们是不是一开始就不该这样」。' },
+  'm-scandal':{ name:'丑闻缠身',   rank:'D', route:'manager', txt:'恋情、打压、内部爆料。媒体的标题里，你的名字比团名更靠前。' },
+  'm-profit': { name:'商业机器',   rank:'A', route:'manager', txt:'账面很漂亮。只是团员看你的眼神，已经和出道时不一样了。' },
+  'm-normal': { name:'合格经纪人', rank:'B', route:'manager', txt:'没有奇迹也没有崩盘。你把他们安全地带过了这一年。' },
+  'i-ace':    { name:'团魂担当',   rank:'S', route:'idol',    txt:'后来大家提到那一年，说的不是成绩，是「那个时候我们五个真的很好」。' },
+  'i-duo':    { name:'双顶流情侣', rank:'S', route:'idol',    txt:'两张专辑同时上榜的那周，你们在音乐节目后台隔着人群对了一眼。没人拍到。' },
+  'm-family': { name:'像家人一样', rank:'A', route:'manager', txt:'合约到期那天，四个人一起续了约，条件栏写的是「和原来一样」。' },
+  'm-partner':{ name:'越界的搭档', rank:'A', route:'manager', txt:'你们没公开，也没有分开。工作关系成了掩护，也成了你们之间最长的借口。' }
+};
+
+var GALLERY_KEY = 'idol_sim_endings_v1';
+var SAVE_KEY = 'idol_sim_save_v1';
+
+/* ================= 视图切换 ================= */
+function show(v){
+  ['v-start','v-setup','v-game','v-end'].forEach(function(k){
+    var el = $(k); if(el) el.classList.toggle('active', k===v);
+  });
+  document.body.classList.toggle('dark', v === 'v-start');
+  window.scrollTo(0,0);
+}
+
+/* ================= 选角 ================= */
+var setupRoute = 'idol';
+var pickPos = 'vocal';
+var pickStyle = 'strict';
+var pickVariant = 'trainee';
+
+function goSetup(route){
+  setupRoute = route;
+  pickPos = 'vocal'; pickStyle = 'strict'; pickVariant = 'trainee';
+  renderSetup();
+  show('v-setup');
+}
+
+function renderSetup(){
+  var kicker = $('setup-kicker'), title = $('setup-title'), desc = $('setup-desc'), body = $('setup-body');
+  if(setupRoute === 'idol'){
+    kicker.textContent = 'ROUTE A / IDOL';
+    title.textContent = '你要怎么出道';
+    desc.textContent = '练习生的路慢一点，但底子扎实；直接出道起点高，根基浅、也更早被盯上。';
+    body.innerHTML =
+      '<div class="block"><div class="block-label">起点 <i></i></div><div class="opt-list">' +
+        optHtml('variant','trainee','练习生出身','三年练习室，粉丝不多，但公司愿意等你') +
+        optHtml('variant','debut','直接出道','带着一支新团空降，起点高，压力也大') +
+      '</div></div>' +
+      '<div class="block"><div class="block-label">队内定位 <i></i></div><div class="opt-list">' +
+        POSITIONS.map(function(p){ return optHtml('pos', p.id, p.name, p.desc); }).join('') +
+      '</div></div>' +
+      '<div class="block"><div class="block-label">你的名字（可留空） <i></i></div>' +
+        '<input class="name-input" id="in-name" maxlength="8" placeholder="比如：林知夏">' +
+      '</div>';
+  }else{
+    kicker.textContent = 'ROUTE B / MANAGER';
+    title.textContent = '你要怎么带人';
+    desc.textContent = '你接手一支刚出道的四人团。风格决定他们听不听你，成绩决定公司留不留你。';
+    body.innerHTML =
+      '<div class="block"><div class="block-label">管理风格 <i></i></div><div class="opt-list">' +
+        STYLES.map(function(s){ return optHtml('style', s.id, s.name, s.desc); }).join('') +
+      '</div></div>' +
+      '<div class="block"><div class="block-label">你的名字（可留空） <i></i></div>' +
+        '<input class="name-input" id="in-name" maxlength="8" placeholder="比如：周叙">' +
+      '</div>' +
+      '<div class="block"><div class="block-label">你接手的新团 <i></i></div>' +
+        '<div class="members">' +
+          '<div class="mem"><div class="av" style="background:#2B2C36">姜</div><div class="mi"><div class="mt"><b>姜允书</b><small>主唱</small></div><div class="mood">实力 82 · 人气 64 · 状态 58</div></div></div>' +
+          '<div class="mem"><div class="av" style="background:#4B57A8">林</div><div class="mi"><div class="mt"><b>林夏恩</b><small>主舞</small></div><div class="mood">实力 78 · 人气 58 · 状态 62</div></div></div>' +
+          '<div class="mem"><div class="av" style="background:#D42256">郑</div><div class="mi"><div class="mt"><b>郑雨棠</b><small>门面</small></div><div class="mood">实力 60 · 人气 86 · 状态 44</div></div></div>' +
+          '<div class="mem"><div class="av" style="background:#B98A2E">裴</div><div class="mi"><div class="mt"><b>裴知安</b><small>忙内</small></div><div class="mood">实力 70 · 人气 52 · 状态 70</div></div></div>' +
+        '</div></div>';
+  }
+  $('setup-hint').textContent = '游戏会自动存档，可以中途退出、下次继续。';
+  $('setup-start').textContent = '开始第 1 周';
+}
+
+function optHtml(group, id, name, desc){
+  var on = (group==='variant'&&pickVariant===id) || (group==='pos'&&pickPos===id) || (group==='style'&&pickStyle===id);
+  return '<button class="opt'+(on?' on':'')+'" onclick="choose(\''+group+'\',\''+id+'\')">' +
+    '<span class="mk"></span><span><span class="k">'+name+'</span><span class="d">'+desc+'</span></span></button>';
+}
+
+function choose(group, id){
+  if(group==='variant') pickVariant = id;
+  if(group==='pos') pickPos = id;
+  if(group==='style') pickStyle = id;
+  var nameVal = $('in-name') ? $('in-name').value : '';
+  renderSetup();
+  if($('in-name')) $('in-name').value = nameVal;
+}
+
+/* ================= 开局 ================= */
+function startGame(){
+  var nm = ($('in-name') && $('in-name').value.trim()) || (setupRoute==='idol' ? pick(NAMES_A) : pick(NAMES_B));
+  if(setupRoute === 'idol'){
+    var trainee = pickVariant === 'trainee';
+    S = {
+      route:'idol', name:nm, group:'NOVA', position:pickPos, week:1, ap:trainee?3:2,
+      pop: trainee?18:42, tal: trainee?26:44, rep: trainee?30:26,
+      sta:100, trust: trainee?42:32, money: trainee?6:12, subs: trainee?0:40,
+      risk:0, lover:null, heart:0, flags:{}, log:[], ended:false, endingId:null,
+      pos: POSITIONS.filter(function(p){return p.id===pickPos;})[0].name,
+      trainee: trainee, team: 50, pending: [], arc: {}, sceneUsed: []
+    };
+    pushLog('第 1 周的日程开始了。' + (trainee ? '你还在月末评价的名单上。' : '你的出道舞台就在这周。'), false);
+  }else{
+    S = {
+      route:'manager', name:nm, group:'NOVA', week:1, ap:2, style:pickStyle,
+      budget:80, grep:40, boss:55, risk:0, affair:null, affairExposed:false,
+      members:[
+        {n:'姜允书',pos:'主唱',tal:82,pop:64,mood:58,aff:0},
+        {n:'林夏恩',pos:'主舞',tal:78,pop:58,mood:62,aff:0},
+        {n:'郑雨棠',pos:'门面',tal:60,pop:86,mood:44,aff:0},
+        {n:'裴知安',pos:'忙内',tal:70,pop:52,mood:70,aff:0}
+      ],
+      lover:null, flags:{}, log:[], ended:false, endingId:null,
+      pending: [], arc: {}, sceneUsed: [],
+      styleName: STYLES.filter(function(s){return s.id===pickStyle;})[0].name
+    };
+    pushLog('你签下了 NOVA 的运营权。董事长只说了一句：明年这个时候，我要看到数字。', false);
+  }
+  saveGame();
+  render();
+  show('v-game');
+}
+
+function pushLog(text, hot){
+  if(!S) return;
+  S.log.unshift({ w:S.week, text:text, hot:!!hot });
+  if(S.log.length > 40) S.log.pop();
+}
+
+/* ================= 通用：数值变化 ================= */
+function bump(key, delta, cap){
+  if(!S) return;
+  S[key] = clamp(S[key] + delta, key==='money'||key==='budget'||key==='subs'||key==='risk'||key==='heart' ? 0 : 0, cap===undefined?100:cap);
+  if(key==='money'||key==='budget') S[key] = Math.max(0, S[key]);
+}
+
+function apMax(){ return S.route==='idol' ? (S.trainee?3:2) : 2; }
+
+function avgPop(){ var t=0; S.members.forEach(function(m){t+=m.pop;}); return Math.round(t/S.members.length); }
+function avgMood(){ var t=0; S.members.forEach(function(m){t+=m.mood;}); return Math.round(t/S.members.length); }
+
+/* ================= 渲染 ================= */
+function render(){
+  if(!S) return;
+  if(S.ended){ renderEnd(); show('v-end'); return; }
+  $('gb-name').textContent = S.name;
+  $('gb-sub').textContent = S.route==='idol'
+    ? (S.group + ' · ' + S.pos + ' · 第 ' + S.week + ' 周')
+    : (S.group + ' 经纪人 · ' + S.styleName + ' · 第 ' + S.week + ' 周');
+  var a = '';
+  for(var i=0;i<apMax();i++) a += '<i class="'+(i<S.ap?'':'off')+'"></i>';
+  $('gb-ap').innerHTML = a;
+  $('game-body').innerHTML = S.route==='idol' ? idolBody() : managerBody();
+  show('v-game');
+}
+
+function bar(label, val, cls, unit){
+  return '<div class="stat"><div class="row"><span class="n">'+label+'</span><span class="v num">'+Math.round(val)+(unit||'')+'</span></div>' +
+    '<div class="bar"><i class="'+cls+'" style="width:'+clamp(val)+'%"></i></div></div>';
+}
+
+function logHtml(){
+  if(!S.log.length) return '<div class="logi"><div class="t">—</div><div class="m">还没有发生什么。</div></div>';
+  return S.log.slice(0,10).map(function(l){
+    return '<div class="logi'+(l.hot?' hot':'')+'"><div class="t">W'+l.w+'</div><div class="m">'+l.text+'</div></div>';
+  }).join('');
+}
+
+var ACTS_IDOL = [
+  { id:'practice', n:'练习室', d:'实力 +5～7，体力 −14', cost:14, need:null },
+  { id:'variety',  n:'综艺录制', d:'人气 +6，口碑 +2，体力 −16', cost:16, need:null },
+  { id:'bbl',      n:'泡泡直播', d:'订阅 +16，人气 +2，体力 −8', cost:8, need:null },
+  { id:'fansign',  n:'签售会', d:'收入 +25，口碑 +3，人气门槛 45', cost:18, need:'pop45' },
+  { id:'concert',  n:'演唱会', d:'收入 +120，人气 +5，门槛 78', cost:35, need:'pop78' },
+  { id:'sponsor',  n:'接商务', d:'收入 +40，口碑 −5', cost:12, need:null },
+  { id:'manage',   n:'公司应酬', d:'公司信任 +7，体力 −10', cost:10, need:null },
+  { id:'social',   n:'社交局', d:'认识一个人，人气门槛 50', cost:10, need:'pop50' },
+  { id:'date',     n:'约会', d:'心动 +10，暴露风险上升', cost:12, need:'lover' },
+  { id:'rest',     n:'休息', d:'体力 +28', cost:0, need:null }
+];
+
+function actAvail(a){
+  if(S.ap <= 0) return false;
+  if(S.sta < a.cost) return false;
+  if(a.need === 'pop45' && S.pop < 45) return false;
+  if(a.need === 'pop50' && S.pop < 50) return false;
+  if(a.need === 'pop78' && S.pop < 78) return false;
+  if(a.need === 'lover' && !S.lover) return false;
+  return true;
+}
+
+function idolBody(){
+  var lv = S.lover ? LOVERS.filter(function(x){return x.id===S.lover;})[0] : null;
+  var acts = ACTS_IDOL.map(function(a){
+    var ok = actAvail(a);
+    var lockTxt = '';
+    if(a.need==='pop45' && S.pop<45) lockTxt = '需人气 45';
+    if(a.need==='pop50' && S.pop<50) lockTxt = '需人气 50';
+    if(a.need==='pop78' && S.pop<78) lockTxt = '需人气 78';
+    if(a.need==='lover' && !S.lover) lockTxt = '还没有人';
+    return '<button class="act" onclick="act(\''+a.id+'\')" '+(ok?'':'disabled')+'>' +
+      '<span class="an">'+a.n+'<span class="chev">›</span></span>' +
+      '<span class="ad">'+(lockTxt || a.d)+'</span>' +
+      '<span class="ac'+(a.cost?'':'')+'">'+(a.cost?('体力 '+a.cost):'免费')+'</span>' +
+    '</button>';
+  }).join('');
+
+  var loverHtml = '';
+  if(lv){
+    loverHtml = '<div class="lover-strip">' +
+      '<svg class="h" viewBox="0 0 24 24" fill="none" stroke="#FF3D77" stroke-width="1.6"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>' +
+      '<div class="tx"><b>'+lv.name+'</b><small>'+lv.tag+' · 心动 '+Math.round(S.heart)+'</small></div>' +
+      '<div class="risk">风险 '+Math.round(S.risk)+'</div></div>';
+  }
+
+  return '<div class="panel">' +
+    '<div class="weekrow">' +
+      '<div><div class="w">WEEK</div><div class="big num">'+S.week+'<small>/ '+MAXW+'</small></div></div>' +
+      '<div class="money"><b class="num">'+Math.round(S.money)+' 万</b><span>存款</span></div>' +
+    '</div>' +
+    '<div class="stats">' +
+      bar('人气', S.pop, 'pink') + bar('实力', S.tal, '') + bar('口碑', S.rep, 'gold') +
+      bar('体力', S.sta, 'blue') + bar('公司信任', S.trust, '') + bar('队内关系', S.team||50, '') +
+    '</div>' +
+    loverHtml +
+    '<div class="sect"><div class="sect-h"><h4>本周行动</h4><em>剩余 '+S.ap+' 点</em></div>' +
+      '<div class="acts">'+acts+'</div></div>' +
+    '<div class="sect"><div class="sect-h"><h4>近况</h4><em>订阅 '+Math.round(S.subs)+' 千人 · 伏笔 '+((S.pending||[]).length)+'</em></div>' +
+      '<div class="log">'+logHtml()+'</div></div>' +
+    '<div class="bottom-bar"><button class="btn '+(S.ap===0?'pink':'ghost')+'" onclick="nextWeek()">结束本周 →</button></div>' +
+  '</div>';
+}
+
+var MACT = [
+  { id:'cb',   n:'安排回归', d:'团体人气 +，口碑 +，预算 −10，状态 −10' },
+  { id:'tour', n:'安排巡演', d:'预算 +70，状态 −16，口碑 −3' },
+  { id:'show', n:'安排综艺', d:'人气 +，口碑 +，状态 −6' },
+  { id:'rest', n:'全团休息', d:'状态 +18，人气 −4' }
+];
+
+function managerBody(){
+  var acts = MACT.map(function(a){
+    var lock = S.ap<=0;
+    return '<button class="act" onclick="mact(\''+a.id+'\')" '+(lock?'disabled':'')+'>' +
+      '<span class="an">'+a.n+'<span class="chev">›</span></span><span class="ad">'+a.d+'</span>' +
+      '<span class="ac">1 点</span></button>';
+  }).join('');
+
+  var extra = '<button class="act" onclick="openMembersSheet()" '+(S.ap<=0?'disabled':'')+'>' +
+      '<span class="an">谈心<span class="chev">›</span></span><span class="ad">挑一个人，状态 +12</span><span class="ac">1 点</span></button>' +
+    '<button class="act" onclick="doPR()" '+(S.ap<=0||S.budget<20?'disabled':'')+'>' +
+      '<span class="an">公关<span class="chev">›</span></span><span class="ad">口碑 +9，预算 −20</span><span class="ac">1 点</span></button>' +
+    '<button class="act" onclick="doCheck()" '+(S.ap<=0||S.budget<8?'disabled':'')+'>' +
+      '<span class="an">查恋爱<span class="chev">›</span></span><span class="ad">预算 −8，可能查到点东西</span><span class="ac">1 点</span></button>' +
+    '<button class="act" onclick="openDateSheet()" '+(S.ap<=0?'disabled':'')+'>' +
+      '<span class="an">私约<span class="chev">›</span></span><span class="ad">和某个团员吃顿饭（需要好感 60）</span><span class="ac">1 点</span></button>';
+
+  var mem = S.members.map(function(m, i){
+    var color = ['#2B2C36','#4B57A8','#D42256','#B98A2E'][i%4];
+    return '<div class="mem"><div class="av" style="background:'+color+'">'+m.n.charAt(0)+'</div>' +
+      '<div class="mi"><div class="mt"><b>'+m.n+'</b><small>'+m.pos+' · 热 '+Math.round(m.pop)+'</small></div>' +
+      '<div class="bar"><i style="width:'+clamp(m.pop)+'%"></i></div>' +
+      '<div class="mood">状态 '+Math.round(m.mood)+' · 好感 '+Math.round(m.aff)+(m.love?' · 恋爱中':'')+'</div></div></div>';
+  }).join('');
+
+  var loverLine = S.lover ? '<div class="lover-strip">' +
+      '<svg class="h" viewBox="0 0 24 24" fill="none" stroke="#FF3D77" stroke-width="1.6"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>' +
+      '<div class="tx"><b>'+S.lover+'</b><small>你和你的团员，正在越界</small></div><div class="risk">风险 '+Math.round(S.risk)+'</div></div>' : '';
+
+  return '<div class="panel">' +
+    '<div class="weekrow">' +
+      '<div><div class="w">WEEK</div><div class="big num">'+S.week+'<small>/ '+MAXW+'</small></div></div>' +
+      '<div class="money"><b class="num">'+Math.round(S.budget)+' 万</b><span>公司预算</span></div>' +
+    '</div>' +
+    '<div class="stats">' +
+      bar('团体人气', avgPop(), 'pink') + bar('口碑', S.grep, 'gold') +
+      bar('公司信任', S.boss, '') + bar('团队状态', avgMood(), 'blue') +
+    '</div>' +
+    loverLine +
+    '<div class="sect"><div class="sect-h"><h4>排期</h4><em>剩余 '+S.ap+' 点</em></div>' +
+      '<div class="acts">'+acts+'</div>' +
+      '<div class="acts" style="margin-top:8px">'+extra+'</div></div>' +
+    '<div class="sect"><div class="sect-h"><h4>团员</h4><em>4 人</em></div><div class="members">'+mem+'</div></div>' +
+    '<div class="sect"><div class="sect-h"><h4>近况</h4><em>—</em></div><div class="log">'+logHtml()+'</div></div>' +
+    '<div class="bottom-bar"><button class="btn '+(S.ap===0?'pink':'ghost')+'" onclick="nextWeek()">结束本周 →</button></div>' +
+  '</div>';
+}
+
+/* ================= 偶像行动 ================= */
+function act(kind){
+  if(!S || S.ap<=0) return;
+  var def = ACTS_IDOL.filter(function(a){return a.id===kind;})[0];
+  if(!def) return;
+  if(S.sta < def.cost){ toast('体力不够了，先休息一周'); return; }
+
+  S.ap--; S.sta = Math.max(0, S.sta - def.cost);
+  var msg = '';
+
+  if(kind==='practice'){
+    var g = (S.position==='主唱'?2:(S.position==='主舞'?1:0));
+    S.tal = clamp(S.tal + rnd(5,7) + g);
+    msg = '练到凌晨，' + (S.trainee?'月末评价的老师多看了你两眼。':'镜子里的动作终于不再迟疑。');
+    if(S.tal>85) msg += '有人说你现在的现场已经能救场了。';
+  }
+  if(kind==='variety'){
+    S.pop = clamp(S.pop + rnd(5,7));
+    S.rep = clamp(S.rep + (S.position==='综艺担当'?4:2));
+    msg = '录制现场你接住了那个梗。剪辑出来之后，弹幕在刷你的名字。';
+  }
+  if(kind==='bbl'){
+    S.subs = Math.max(0, S.subs + rnd(14,20));
+    S.pop = clamp(S.pop + 2);
+    msg = '泡泡上发了一条「今天有点想你们」。订阅数往上跳了一截。';
+  }
+  if(kind==='fansign'){
+    S.money += 25; S.rep = clamp(S.rep + 3); S.pop = clamp(S.pop + 1);
+    msg = '签售会排到 800 号。有人握着你的手说「我等了你三年」，你差点没忍住。';
+  }
+  if(kind==='concert'){
+    S.money += 120; S.pop = clamp(S.pop + 5); S.rep = clamp(S.rep + 4);
+    msg = '灯牌亮起来的那一秒，全场喊你的名字。你在返场时哭了，被拍到了。';
+  }
+  if(kind==='sponsor'){
+    S.money += 40; S.pop = clamp(S.pop + 2); S.rep = clamp(S.rep - 5);
+    msg = '又接了一个代言。评论区说你现在像广告牌，什么都卖。';
+  }
+  if(kind==='manage'){
+    S.trust = clamp(S.trust + 7);
+    msg = '陪室长喝了两杯，他说「你是这批里最省心的」。';
+  }
+  if(kind==='social'){ openSocialSheet(); return; }
+  if(kind==='date'){ doDate(); return; }
+  if(kind==='rest'){
+    S.sta = clamp(S.sta + 28);
+    msg = '睡了十一个小时。醒来的时候，手机上有 300 条未读。';
+  }
+
+  pushLog(msg, kind==='concert');
+  saveGame();
+  if(!maybeScene(kind)) render();
+}
+
+/* ---- 社交：认识恋人 ---- */
+function openSocialSheet(){
+  var opts = LOVERS.map(function(l){
+    return { l: l.name + '　·　' + l.tag, fn: function(){
+      if(S.lover) return '你已经有 ' + S.lover + ' 了，先处理好手上的关系。';
+      S.lover = l.name; S.heart = 30; S.risk = clamp(S.risk + 10);
+      return '你和' + l.name + '开始频繁见面。手机里多了一个不敢备注真名的联系人。';
+    }};
+  });
+  openSheet({ k:'SOCIAL', t:'你今晚去见谁', b:'偶像和偶像之间，最容易被拍到、也最容易动心。', opts:opts, noCost:false });
+}
+
+/* ---- 约会 ---- */
+function doDate(){
+  var lv = LOVERS.filter(function(x){return x.id===S.lover;})[0];
+  if(!lv) return;
+  S.heart = clamp(S.heart + 10, 0, 100);
+  S.risk = clamp(S.risk + Math.round(8 * lv.mult));
+  S.ap--;
+  var lines = [
+    '你们在便利店买了关东煮，坐在车里吃完。',
+    '他把外套披在你肩上，说「别感冒，明天还有打歌」。',
+    '凌晨三点的练习室，只有你们两个人和一台没关的音响。'
+  ];
+  pushLog(pick(lines) + '　（风险 ' + Math.round(S.risk) + '）', false);
+  if(S.risk >= 80) pushLog('有人开始在同一栋楼里反复出现。你们都知道那意味着什么。', true);
+  saveGame(); render();
+}
+
+/* ================= 经纪人行动 ================= */
+function mact(kind){
+  if(!S || S.ap<=0) return;
+  S.ap--;
+  var styleMod = S.style==='strict' ? -2 : (S.style==='soft' ? 2 : 0);
+  var msg = '';
+
+  if(kind==='cb'){
+    S.members.forEach(function(m){ m.pop = clamp(m.pop + rnd(5,8)); m.mood = clamp(m.mood - 10 + styleMod); });
+    S.grep = clamp(S.grep + 6); S.budget = Math.max(0, S.budget - 10);
+    msg = '回归日程排满。音源榜在凌晨动了一下，你盯着数据到天亮。';
+  }
+  if(kind==='tour'){
+    S.budget += 70;
+    S.members.forEach(function(m){ m.pop = clamp(m.pop + 3); m.mood = clamp(m.mood - 16 + styleMod); });
+    S.grep = clamp(S.grep - 3);
+    msg = '七天四城。最后一场结束，有人在后台直接睡着了。';
+  }
+  if(kind==='show'){
+    S.members.forEach(function(m){ m.pop = clamp(m.pop + rnd(4,6)); m.mood = clamp(m.mood - 6 + styleMod); });
+    S.grep = clamp(S.grep + 5); S.budget = Math.max(0, S.budget - 6);
+    msg = '团综播出，弹幕说这群人「终于有活人味了」。';
+  }
+  if(kind==='rest'){
+    S.members.forEach(function(m){ m.mood = clamp(m.mood + 18 + styleMod); m.pop = clamp(m.pop - 4); });
+    S.budget = Math.max(0, S.budget - 8);
+    msg = '你停了一周的行程。粉丝在超话里吵了一架，但孩子们的脸回来了。';
+  }
+  pushLog(msg, kind==='tour');
+  saveGame();
+  if(!maybeScene(kind)) render();
+}
+
+function doPR(){
+  if(S.ap<=0) return;
+  if(S.budget < 20){ toast('预算不够'); return; }
+  S.ap--; S.budget -= 20; S.grep = clamp(S.grep + 9);
+  pushLog('通稿铺出去了。热搜上你的团名后面，终于跟了一个正面的词。', false);
+  saveGame(); render();
+}
+
+function openMembersSheet(){
+  if(S.ap<=0) return;
+  var opts = S.members.map(function(m){
+    return { l: m.n + '　·　状态 ' + Math.round(m.mood) + ' / 好感 ' + Math.round(m.aff),
+      fn: function(){
+        m.mood = clamp(m.mood + 12); m.aff = clamp(m.aff + 8);
+        return '你和' + m.n + '聊到很晚。他说「至少你还愿意听」。';
+      }};
+  });
+  openSheet({ k:'TALK', t:'今晚找谁谈', b:'谈心不解决资源问题，但能让人撑住。', opts:opts });
+}
+
+function openDateSheet(){
+  if(S.ap<=0) return;
+  var avail = S.members.filter(function(m){ return m.aff>=60; });
+  if(!avail.length){ toast('还没有人愿意和你单独吃饭'); return; }
+  var opts = avail.map(function(m){
+    return { l: m.n + '　·　好感 ' + Math.round(m.aff),
+      fn: function(){
+        if(S.lover) return '你已经和' + S.lover + '绑在一起了。';
+        S.lover = m.n; S.risk = clamp(S.risk + 20); m.aff = clamp(m.aff + 10);
+        return '饭吃到一半，' + m.n + '说「你到底是经纪人，还是别的什么」。你没有回答。';
+      }};
+  });
+  openSheet({ k:'PRIVATE', t:'超出工作范围的饭局', b:'你知道这一步迈出去，后面就很难收回来。', opts:opts });
+}
+
+function doCheck(){
+  if(S.ap<=0) return;
+  if(S.budget < 8){ toast('预算不够'); return; }
+  S.ap--; S.budget -= 8;
+  if(Math.random() < 0.45){
+    openAffairSheet();
+  }else{
+    pushLog('你跟了三天，只拍到他们买咖啡和去练习室。', false);
+    saveGame(); render();
+  }
+}
+
+function openAffairSheet(){
+  var m = pick(S.members);
+  m.love = true;
+  openSheet({
+    k:'INCIDENT', t: m.n + '的恋爱被拍到了',
+    b:'照片是从粉丝手里流出来的，还没上热搜。你有一周时间决定怎么处理。',
+    opts:[
+      { l:'压下来（预算 −25）', fn:function(){
+          S.budget = Math.max(0, S.budget - 25); S.grep = clamp(S.grep + 3);
+          m.mood = clamp(m.mood + 5);
+          return '照片被买断了。' + m.n + '知道是你做的，没有说谢谢，但第二天准时到了。';
+      }},
+      { l:'当众警告，队内禁恋', fn:function(){
+          S.members.forEach(function(x){ x.mood = clamp(x.mood - 8); });
+          m.mood = clamp(m.mood - 15); S.boss = clamp(S.boss + 3);
+          return '你把四个人叫到办公室，说了很重的话。空气像冻住了一样。';
+      }},
+      { l:'直接拆散（预算 −30）', fn:function(){
+          S.budget = Math.max(0, S.budget - 30); m.love = false;
+          m.mood = clamp(m.mood - 20); S.grep = clamp(S.grep + 6);
+          return '对方被调走了。' + m.n + '在练习室待到凌晨，你路过时听见鼓点很重。';
+      }},
+      { l:'放行，但要求保密', fn:function(){
+          m.mood = clamp(m.mood + 15); S.risk = clamp(S.risk + 22);
+          return '你默许了。他第一次跟你说「谢谢哥」，眼神亮得让你有点不安。';
+      }},
+      { l:'拿来炒 CP（人气换口碑）', fn:function(){
+          S.members.forEach(function(x){ x.pop = clamp(x.pop + 3); }); S.grep = clamp(S.grep - 5);
+          S.risk = clamp(S.risk + 15);
+          return '通稿把「恋爱」写成了「限定 CP」。热搜是上去了，评论里有人说你们拿感情炒作。';
+      }}
+    ]
+  });
+}
+
+/* ================= 周推进 ================= */
+function nextWeek(){
+  if(!S || S.ended) return;
+  if(S.ap > 0 && !confirm('还有 ' + S.ap + ' 点行动没用掉，确定结束本周？')) return;
+  S.week++;
+  S.ap = apMax();
+
+  if(S.route==='idol'){
+    S.sta = clamp(S.sta + 6);
+    S.money += Math.round(S.subs / 20 * (1 + S.tal / 200));
+    if(S.rep < 30) S.pop = clamp(S.pop - 2);
+    if(S.week % 4 === 0) comeback();
+  }else{
+    S.budget = Math.max(0, S.budget - 8);
+    S.members.forEach(function(m){
+      m.mood = clamp(m.mood - 3);
+      if(m.mood < 35) m.pop = clamp(m.pop - 3);
+      if(m.mood > 80) m.pop = clamp(m.pop + 1);
+    });
+    var gp = avgPop();
+    S.boss = clamp(S.boss + (gp>=70 ? 2 : -3));
+    S.grep = clamp(S.grep + (avgMood()>=60 ? 2 : -2));
+    if(S.risk >= 100) S.affairExposed = true;
+  }
+
+  saveGame();
+  if(checkEnding()) return;
+
+  if(processPending()) return;
+  if(checkArcStart()) return;
+  if(Math.random() < 0.35){ triggerEvent(); return; }
+  render();
+  if(S.ap===0) toast('这周结束了，可以继续下一周');
+}
+
+function comeback(){
+  var score = S.tal*0.45 + S.pop*0.4 + S.rep*0.15 + rnd(-8,8);
+  var line;
+  if(score >= 82){
+    S.pop = clamp(S.pop + 9); S.rep = clamp(S.rep + 6); S.money += 60; S.trust = clamp(S.trust + 6);
+    S.subs += 40;
+    line = '回归一位。安可舞台上你把奖杯举起来的时候，手在抖。';
+  }else if(score >= 68){
+    S.pop = clamp(S.pop + 5); S.rep = clamp(S.rep + 2); S.money += 30; S.subs += 20;
+    line = '音源候补。差一点，但公司说这次方向对了。';
+  }else if(score >= 52){
+    S.pop = clamp(S.pop + 2); S.rep = clamp(S.rep + 1); S.money += 15; S.subs += 8;
+    line = '成绩平稳。没有惊喜，也没有人挨骂。';
+  }else{
+    S.pop = clamp(S.pop - 6); S.rep = clamp(S.rep - 4); S.trust = clamp(S.trust - 3);
+    line = '这次回归滑了。评论区第一条是「他们是不是不行了」。';
+  }
+  pushLog('【第 ' + S.week + ' 周回归】' + line, score>=82);
+}
+
+/* ================= 弹窗系统 ================= */
+function openSheet(o){
+  curEv = o;
+  var opts = o.opts.map(function(op, i){
+    return '<button class="opt" onclick="runOpt('+i+')"><span class="mk"></span>' +
+      '<span><span class="k">'+op.l+'</span></span></button>';
+  }).join('');
+  $('sheet').innerHTML =
+    '<div class="st">'+o.k+'</div><h3>'+o.t+'</h3><div class="body">'+o.b+'</div>' +
+    '<div class="opt-list" id="sheet-opts">'+opts+'</div>' +
+    (o.closable === false ? '' : '<button class="close" onclick="closeSheet()">先不做</button>');
+  $('scrim').classList.add('on');
+}
+
+function runOpt(i){
+  var msg = curEv.opts[i].fn() || '事情就这么过去了。';
+  pushLog(msg, false);
+  $('sheet-opts').innerHTML =
+    '<div class="result-line on">'+msg+'</div>' +
+    '<button class="btn pink" style="width:100%;margin-top:18px" onclick="closeSheet()">继续</button>';
+  saveGame();
+}
+
+function closeSheet(){
+  $('scrim').classList.remove('on');
+  if(S && !S.ended){
+    if(checkEnding()) return;
+    render();
+  }
+}
+
+/* ================= 事件 ================= */
+var EV_IDOL = [
+  { id:'g1', cond:function(){return S.week>=5;}, t:'那辆车跟了你三天',
+    b:'从公司到宿舍，同一辆黑色轿车一直在后面。第三天它停在了你家楼下。',
+    opts:[
+      { l:'报警备案', fn:function(){ S.rep=clamp(S.rep+4); S.sta=clamp(S.sta-10); return '警察做了笔录。第二天公司门口多了两个陌生人，说是来「支持你」的。'; }},
+      { l:'在直播里当场警告', fn:function(){ S.pop=clamp(S.pop+3); S.rep=clamp(S.rep-4); return '你说了那段话，弹幕一半说心疼，一半说你在作秀。'; }},
+      { l:'假装没看见，照常营业', fn:function(){ S.pop=clamp(S.pop+2); S.risk=clamp(S.risk+12); return '你笑着走出公司大门。那辆车也笑了。'; }}
+    ]},
+  { id:'g2', cond:function(){return S.trust<45;}, t:'这季的行程没有你',
+    b:'回归名单里你的名字排在最末。室长说「先让热度高的顶上」。',
+    opts:[
+      { l:'忍下来，继续练习', fn:function(){ S.trust=clamp(S.trust+6); S.pop=clamp(S.pop-4); return '你把练习室钥匙留到最晚。没人知道你在等什么。'; }},
+      { l:'直接找室长谈', fn:function(){ S.trust=clamp(S.trust-5); S.pop=clamp(S.pop+3); return '谈话不欢而散。但第二天，你的名字被往前挪了一位。'; }},
+      { l:'发一篇小作文', fn:function(){ S.rep=clamp(S.rep+6); S.trust=clamp(S.trust-8); return '粉丝在超话里刷了一夜。公司发了通稿，说「一切按计划进行」。'; }}
+    ]},
+  { id:'g3', cond:function(){return S.pop>=52;}, t:'黑热搜挂上第一',
+    b:'词条里是一段被剪过的视频。转发量在你睡觉的时候翻了十倍。',
+    opts:[
+      { l:'花钱撤热搜（存款 −30）', fn:function(){ S.money=Math.max(0,S.money-30); S.rep=clamp(S.rep+5); return '词条消失了。但截图已经在别的平台存了几百份。'; }},
+      { l:'什么都不做，硬扛', fn:function(){ S.rep=clamp(S.rep-6); return '三天后热度自己掉了。你瘦了四斤，没人发现。'; }},
+      { l:'公司发正式声明', fn:function(){ S.rep=clamp(S.rep-3); S.pop=clamp(S.pop+4); return '声明写得滴水不漏，评论区说「这套话术我们熟」。'; }}
+    ]},
+  { id:'g4', cond:function(){return S.week>=9;}, t:'队友的恋爱被拍到了',
+    b:'照片先发到了你手机上，对方问：要不要告诉公司。',
+    opts:[
+      { l:'帮他瞒下来', fn:function(){ S.rep=clamp(S.rep+2); S.risk=clamp(S.risk+8); return '你们成了共犯。他从那天起对你格外客气。'; }},
+      { l:'交给公司处理', fn:function(){ S.trust=clamp(S.trust+5); S.rep=clamp(S.rep-2); return '公司连夜开会。他被停了两个行程，你看他的时候有点心虚。'; }},
+      { l:'立刻和他保持距离', fn:function(){ S.rep=clamp(S.rep-3); return '你搬了宿舍。走廊上遇见，他只是点头。'; }}
+    ]},
+  { id:'g5', cond:function(){return S.pop>=48;}, t:'综艺把你剪成了反派',
+    b:'你的那句话被剪掉了前半句。播出后，「没礼貌」成了你的新标签。',
+    opts:[
+      { l:'找节目组理论', fn:function(){ S.rep=clamp(S.rep+4); S.pop=clamp(S.pop-3); return '对方答应补剪。你在回去的车上，手一直在抖。'; }},
+      { l:'用自嘲回应', fn:function(){ S.pop=clamp(S.pop+6); S.rep=clamp(S.rep+2); return '你发了一条「我确实嘴笨」。评论区笑了，风向转了一半。'; }},
+      { l:'沉默', fn:function(){ S.rep=clamp(S.rep-4); return '不回应也是一种回应。标签就这么留下了。'; }}
+    ]},
+  { id:'g6', cond:function(){return S.pop>=58;}, t:'品牌方追加了一份合约',
+    b:'对方指名要你单人的形象，附带一条：不能有任何负面。',
+    opts:[
+      { l:'接（存款 +45）', fn:function(){ S.money+=45; S.rep=clamp(S.rep-4); return '钱到账很快。你开始每天检查自己的每一条动态。'; }},
+      { l:'只接精品，谈条件（存款 +25）', fn:function(){ S.money+=25; S.rep=clamp(S.rep+3); return '你推掉了一半的钱，换来了一个更长的合作。'; }},
+      { l:'推掉，专心回归', fn:function(){ S.trust=clamp(S.trust+4); S.rep=clamp(S.rep+3); return '室长皱了下眉，但没说什么。'; }}
+    ]},
+  { id:'g7', cond:function(){return S.pop>=40;}, t:'一个老粉脱粉回踩',
+    b:'她发了三千字长文，从你出道那天写起，最后一句是「我看错人了」。',
+    opts:[
+      { l:'私信她，认真道歉', fn:function(){ S.rep=clamp(S.rep+5); return '她回了你一句「谢谢你还记得我」。长文没有删。'; }},
+      { l:'公开发一条回应', fn:function(){ S.rep=clamp(S.rep+3); S.pop=clamp(S.pop-2); return '有人说你真诚，有人说你在表演真诚。'; }},
+      { l:'当作没看见', fn:function(){ S.pop=clamp(S.pop-4); return '你把那条微博划走了。手指停了一会儿。'; }}
+    ]},
+  { id:'g8', cond:function(){return S.week>=8;}, t:'忙内在后台哭了',
+    b:'她蹲在化妆间的角落，说「我是不是拖累大家了」。',
+    opts:[
+      { l:'陪她一起练到天亮', fn:function(){ S.rep=clamp(S.rep+4); S.pop=clamp(S.pop+2); S.sta=clamp(S.sta-8); return '第二天她的走位一个没错。上台前她拉住你的袖子。'; }},
+      { l:'告诉她自己的事自己扛', fn:function(){ S.trust=clamp(S.trust+3); S.rep=clamp(S.rep-2); return '她擦干眼睛出去了。之后你们的话变少了。'; }},
+      { l:'把这件事报给公司', fn:function(){ S.trust=clamp(S.trust+5); return '公司给她安排了心理辅导，也给她记了一笔「状态不稳定」。'; }}
+    ]},
+  { id:'g9', cond:function(){return S.pop>=62;}, t:'舞台升降台卡住了',
+    b:'你站在两米高的位置，下面的机械发出一声怪响。',
+    opts:[
+      { l:'硬撑把整首跳完', fn:function(){ S.rep=clamp(S.rep+8); S.sta=clamp(S.sta-20); return '直拍播放量破了自己的记录。下台时脚踝肿了。'; }},
+      { l:'示意下台处理', fn:function(){ S.rep=clamp(S.rep-3); S.trust=clamp(S.trust+3); return '演出中断了九十秒。有人骂，也有人说「人比舞台重要」。'; }},
+      { l:'让替补顶上', fn:function(){ S.rep=clamp(S.rep-5); S.pop=clamp(S.pop-3); return '替补完成得很好。你在台下鼓掌，掌心是凉的。'; }}
+    ]},
+  { id:'g10', cond:function(){return S.pop>=68;}, t:'有人质疑你们的音源',
+    b:'一张对比图在论坛传开，说你们的曲线「不像真人刷出来的」。',
+    opts:[
+      { l:'公开后台数据', fn:function(){ S.rep=clamp(S.rep+4); return '数据摊开之后，质疑声小了一半。剩下的一半说「数据也能买」。'; }},
+      { l:'不回应', fn:function(){ S.trust=clamp(S.trust-4); return '公司内部开始查。你被叫去问话，问了三小时。'; }},
+      { l:'把矛头指向公司', fn:function(){ S.trust=clamp(S.trust-8); S.rep=clamp(S.rep+6); return '粉丝开始在公司楼下抗议。你成了那个「敢说话的人」。'; }}
+    ]},
+  { id:'g11', cond:function(){return S.lover && S.risk>=55;}, t:'你们的照片被拍到了',
+    b:'画面不算清楚，但足够认出来。对方经纪公司已经打来电话。',
+    opts:[
+      { l:'花钱压下去（存款 −40）', fn:function(){ S.money=Math.max(0,S.money-40); S.risk=clamp(S.risk-28); return '照片被买走了。你们之间也少了一次可以坦白的理由。'; }},
+      { l:'承认，公开恋爱', fn:function(){ S.pop=clamp(S.pop+6); S.rep=clamp(S.rep-9); S.risk=0; return '手写信发出去的那晚，粉丝在超话里哭成一片。你说「我想诚实一次」。'; }},
+      { l:'分手，划清界限', fn:function(){ S.heart=0; S.lover=null; S.risk=clamp(S.risk-30); S.rep=clamp(S.rep+2); return '你发了最后一条消息，然后删掉了整个对话框。'; }}
+    ]},
+  { id:'g12', cond:function(){return S.trainee && S.week>=6;}, t:'月末评价名单',
+    b:'室长把名单贴出来，你的名字在中间。上面写着：待定。',
+    opts:[
+      { l:'加倍练习', fn:function(){ S.tal=clamp(S.tal+4); S.sta=clamp(S.sta-12); S.trust=clamp(S.trust+4); return '你把「待定」两个字拍下来，设成了手机壁纸。'; }},
+      { l:'去找室长表态', fn:function(){ S.trust=clamp(S.trust+6); S.pop=clamp(S.pop-2); return '你说「给我一次机会」。他沉默了很久，说「下周看看」。'; }},
+      { l:'当作没这回事', fn:function(){ S.trust=clamp(S.trust-5); return '名单在墙上贴了两周，你每天路过都看一遍。'; }}
+    ]}
+];
+
+var EV_MGR = [
+  { id:'m1', cond:function(){return S.week>=4;}, t:'粉丝拍到了他们一起进公寓',
+    b:'照片还没发出去，先到了你手上。时间戳是昨天凌晨。',
+    opts:[
+      { l:'压下照片（预算 −25）', fn:function(){ S.budget=Math.max(0,S.budget-25); S.grep=clamp(S.grep+4); return '你付了钱。这件事从此只有三个人知道。'; }},
+      { l:'直接把两人叫来谈', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood-10);}); S.grep=clamp(S.grep+3); return '两个人低着头，说「我们知道错了」。你发现自己并不生气。'; }},
+      { l:'放着不管，先看反应', fn:function(){ S.risk=clamp(S.risk+25); return '你赌粉丝不会闹。赌局还没结束。'; }}
+    ]},
+  { id:'m2', cond:function(){return avgMood()<=45;}, t:'有人提出想解约',
+    b:'他把合同放在桌上，说「我在这里看不到未来」。',
+    opts:[
+      { l:'加钱留人（预算 −25）', fn:function(){ S.budget=Math.max(0,S.budget-25); S.members.forEach(function(m){m.mood=clamp(m.mood+12);}); return '钱解决了一半的问题。另一半他没说。'; }},
+      { l:'拿违约金压他', fn:function(){ S.boss=clamp(S.boss+3); S.members.forEach(function(m){m.mood=clamp(m.mood-10);}); return '他签了新的补充协议。签字的手很稳。'; }},
+      { l:'放他走', fn:function(){ var m=S.members[0]; S.members.shift(); S.grep=clamp(S.grep-5); return '空出来一个位置。剩下的三个人，眼神都变了。'; }}
+    ]},
+  { id:'m3', cond:function(){return S.week>=6;}, t:'资方要塞一个人进来',
+    b:'对方很客气，说「只是给个机会，站位随便安排」。',
+    opts:[
+      { l:'拒绝', fn:function(){ S.boss=clamp(S.boss-6); S.grep=clamp(S.grep+4); return '你得罪了一个不该得罪的人。团员们听说了这件事。'; }},
+      { l:'接受', fn:function(){ S.members.forEach(function(m){m.pop=clamp(m.pop+2); m.mood=clamp(m.mood-10);}); S.budget+=20; return '新人来了，站位挤了。有人开始在练习室算自己的镜头秒数。'; }},
+      { l:'折中：给资源不给位置', fn:function(){ S.budget+=30; S.members.forEach(function(m){m.mood=clamp(m.mood-4);}); return '你给了一个综艺席位，保住了队伍的完整。'; }}
+    ]},
+  { id:'m4', cond:function(){return S.week>=8;}, t:'团名挂在黑热搜上',
+    b:'一段后台视频被传出来，有人说你们虐待工作人员。',
+    opts:[
+      { l:'花钱撤（预算 −25）', fn:function(){ S.budget=Math.max(0,S.budget-25); S.grep=clamp(S.grep+7); return '热搜掉了。你在办公室坐到天亮，想的是「下次还压得住吗」。'; }},
+      { l:'让团员开直播解释', fn:function(){ S.grep=clamp(S.grep-3); S.members.forEach(function(m){m.pop=clamp(m.pop+3);}); return '直播里有人哭了。评论区一半信，一半说在演。'; }},
+      { l:'沉默，等风过去', fn:function(){ S.grep=clamp(S.grep-6); return '风没过去。它变成了一句「他们从来没解释过」。'; }}
+    ]},
+  { id:'m5', cond:function(){return S.week>=10;}, t:'团综里出事了',
+    b:'一段玩笑被剪成了霸凌，弹幕在刷「这团完了」。',
+    opts:[
+      { l:'你亲自出面道歉', fn:function(){ S.grep=clamp(S.grep+6); S.boss=clamp(S.boss-2); return '你在镜头前鞠了一躬。团员们在后面站成一排。'; }},
+      { l:'要求删片段，冷处理', fn:function(){ S.grep=clamp(S.grep-4); return '片段删了，但截图还在。'; }}
+    ]},
+  { id:'m6', cond:function(){return avgMood()<=50;}, t:'有人体检报告不太好',
+    b:'医生说需要静养两周。回归就在下周。',
+    opts:[
+      { l:'停掉行程，让他养', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+18); m.pop=clamp(m.pop-6);}); S.grep=clamp(S.grep+4); return '回归延期。粉丝骂了三天，然后开始心疼。'; }},
+      { l:'顶上药物，撑完这次', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood-22); m.pop=clamp(m.pop+4);}); S.boss=clamp(S.boss+3); return '舞台完成了。下台之后他在走廊里扶着墙站了很久。'; }}
+    ]},
+  { id:'m7', cond:function(){return avgPop()>=72;}, t:'一档顶流综艺来抢人',
+    b:'只给一个席位。四个人，一个位置。',
+    opts:[
+      { l:'花预算抢下来（预算 −30）', fn:function(){ S.budget=Math.max(0,S.budget-30); S.members.forEach(function(m){m.pop=clamp(m.pop+8);}); return '席位拿到了。回来的车上，另外三个人一句话都没说。'; }},
+      { l:'让给资方指定的那位', fn:function(){ S.boss=clamp(S.boss+4); S.grep=clamp(S.grep+3); return '你做了个顺水人情。人情这东西，是要还的。'; }},
+      { l:'推掉，全员留在团里', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+6);}); S.grep=clamp(S.grep+2); return '你说「这次不去」。团长在群里发了一个句号。'; }}
+    ]}
+];
+
+var usedEv = [];
+
+function triggerEvent(){
+  var pool = (S.route==='idol' ? EV_IDOL : EV_MGR).filter(function(e){
+    if(usedEv.indexOf(e.id) >= 0) return false;
+    try{ return !e.cond || e.cond(); }catch(err){ return false; }
+  });
+  if(!pool.length){ render(); return; }
+  var ev = pick(pool);
+  usedEv.push(ev.id);
+  openSheet({ k:'EVENT / W' + S.week, t: ev.t, b: ev.b, opts: ev.opts, closable:false });
+}
+
+/* ================= 结局 ================= */
+function checkEnding(){
+  if(!S || S.ended) return false;
+  if(S.route==='idol'){
+    if(S.pop>=92 && S.rep>=55) return endGame('i-super');
+    if(S.rep<=12) return endGame('i-fall');
+    if(S.trust<=8) return endGame('i-freeze');
+    if(S.risk>=100 && S.lover) return endGame('i-love');
+    if(S.week>=24 && (S.team||50)>=88 && S.pop>=76) return endGame('i-ace');
+    if(S.week>=24 && S.lover && S.heart>=88 && S.pop>=72) return endGame('i-duo');
+    if(S.week>MAXW){
+      if(S.pop>=80) return endGame('i-solo');
+      return endGame('i-steady');
+    }
+  }else{
+    if(S.affairExposed) return endGame('m-scandal');
+    if(S.boss<=10) return endGame('m-fire');
+    if(avgMood()<=18) return endGame('m-collapse');
+    if(avgPop()>=90 && S.grep>=70 && S.boss>=55) return endGame('m-legend');
+    if(S.week>=24 && avgMood()>=78 && S.boss>=50) return endGame('m-family');
+    if(S.week>=24 && S.lover && !S.affairExposed && S.risk<80) return endGame('m-partner');
+    if(S.week>MAXW){
+      if(S.budget>=400) return endGame('m-profit');
+      return endGame('m-normal');
+    }
+  }
+  return false;
+}
+
+function endGame(id){
+  S.ended = true; S.endingId = id;
+  try{
+    var g = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
+    if(g.indexOf(id) < 0){ g.push(id); localStorage.setItem(GALLERY_KEY, JSON.stringify(g)); }
+  }catch(e){}
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+  renderEnd();
+  show('v-end');
+  return true;
+}
+
+function renderEnd(){
+  var e = ENDINGS[S.endingId] || ENDINGS['i-steady'];
+  var idol = S.route === 'idol';
+  var stats = idol
+    ? [['人气', Math.round(S.pop)], ['实力', Math.round(S.tal)], ['口碑', Math.round(S.rep)], ['公司信任', Math.round(S.trust)]]
+    : [['团体人气', avgPop()], ['口碑', Math.round(S.grep)], ['公司信任', Math.round(S.boss)], ['结余预算', Math.round(S.budget) + ' 万']];
+
+  var html = '<div class="end-k">' + (idol ? 'ROUTE A · IDOL' : 'ROUTE B · MANAGER') + ' / W' + S.week + '</div>' +
+    '<h1>你的结局<br>是<em>' + e.name + '</em></h1>' +
+    '<div class="rank"><b>' + e.rank + '</b><span>FINAL RANK</span></div>' +
+    '<p class="txt">' + e.txt + '</p>' +
+    '<div class="end-stats">' + stats.map(function(s){
+      return '<div><span>' + s[0] + '</span><b>' + s[1] + '</b></div>';
+    }).join('') + '</div>' +
+    '<div class="end-cta">' +
+      '<button class="btn pink" onclick="restart()">再来一局</button>' +
+      '<button class="btn ghost" onclick="backHome()">回到首页</button>' +
+    '</div>';
+
+  $('end-body').innerHTML = html;
+  $('end-gallery').innerHTML = galleryHtml();
+}
+
+function galleryHtml(){
+  var got = [];
+  try{ got = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]'); }catch(e){}
+  var keys = Object.keys(ENDINGS);
+  var html = '<div class="sect-h"><h4>结局图鉴</h4><em>' + got.length + ' / ' + keys.length + '</em></div>';
+  keys.forEach(function(k){
+    var e = ENDINGS[k];
+    var on = got.indexOf(k) >= 0;
+    html += '<div class="g-item' + (on ? '' : ' locked') + '"><span class="dot"></span>' +
+      (on ? e.name : '？？？') + '<small>' + (on ? e.rank : (e.route === 'idol' ? '爱豆线' : '经纪人线')) + '</small></div>';
+  });
+  return html;
+}
+
+function openGallery(){
+  var got = [];
+  try{ got = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]'); }catch(e){}
+  $('end-body').innerHTML = '<div class="end-k">ARCHIVE</div>' +
+    '<h1 style="font-size:clamp(34px,9vw,52px);margin-top:12px">结局<em>图鉴</em></h1>' +
+    '<p class="txt">已解锁 ' + got.length + ' / ' + Object.keys(ENDINGS).length + '。换一条路线、换一种活法，结局会不一样。</p>' +
+    '<div class="end-cta"><button class="btn ghost" onclick="backHome()">回到首页</button></div>';
+  $('end-gallery').innerHTML = galleryHtml();
+  show('v-end');
+}
+
+function restart(){
+  var route = S ? S.route : 'idol';
+  S = null; usedEv = [];
+  goSetup(route);
+}
+
+function backHome(){
+  S = null; usedEv = [];
+  show('v-start');
+}
+
+function quitToStart(){
+  if(!S) { show('v-start'); return; }
+  if(confirm('这一局会自动存档，随时可以回来。现在回首页？')){
+    saveGame();
+    show('v-start');
+  }
+}
+
+/* ================= 存档 ================= */
+function saveGame(){
+  if(!S) return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({ s:S, used:usedEv })); }catch(e){}
+}
+
+function loadSave(){
+  try{
+    var raw = localStorage.getItem(SAVE_KEY);
+    if(!raw){ toast('还没有存档，先开一局吧'); return; }
+    var d = JSON.parse(raw);
+    S = d.s; usedEv = d.used || [];
+    if(S.ended){ renderEnd(); show('v-end'); }
+    else render();
+  }catch(e){ toast('存档读取失败'); }
+}
+
+/* ================= 剧情系统 ================= */
+/* 伏笔：某些选择会在几周后才回来找你 */
+function scheduleAfter(id, delay){
+  if(!S) return;
+  S.pending = S.pending || [];
+  S.pending.push({ w: S.week + delay, id: id });
+}
+
+function processPending(){
+  if(!S || !S.pending || !S.pending.length) return false;
+  var due = S.pending.filter(function(p){ return p.w <= S.week; });
+  if(!due.length) return false;
+  var p = due[0];
+  S.pending = S.pending.filter(function(x){ return x !== p; });
+  var fn = PEND_EV[p.id];
+  if(!fn){ return false; }
+  fn();
+  return true;
+}
+
+/* 行动专属小场景：点下去不一定只是数字变化 */
+var SCENES = {
+  practice: [
+    { t:'凌晨两点的练习室', b:'镜子里只剩你一个人。隔壁房间传来同样的鼓点，一遍又一遍。',
+      opts:[
+        { l:'过去敲门，一起练', fn:function(){ S.tal=clamp(S.tal+2); S.team=clamp((S.team||50)+6); return '你们对着镜子互相纠错。离开时他说「明天也来啊」。'; }},
+        { l:'戴上耳机继续', fn:function(){ S.tal=clamp(S.tal+3); return '你把音量开到最大。那个人的声音被鼓点盖住了。'; }}
+      ]},
+    { t:'老师只看了你一眼', b:'走位结束，老师说「还行」。这两个字在别人身上是夸奖，在你身上像判词。',
+      opts:[
+        { l:'留下来加练一小时', fn:function(){ S.tal=clamp(S.tal+4); S.sta=clamp(S.sta-6); return '汗把衣服浸透了。你终于知道哪里不对。'; }},
+        { l:'走，去吃点东西', fn:function(){ S.sta=clamp(S.sta+8); S.team=clamp((S.team||50)+4); return '你们在便利店坐到打烊。他说「别把自己逼太狠」。'; }}
+      ]}
+  ],
+  variety: [
+    { t:'导演喊了 Cut 之后', b:'录制结束，主持人低声说「刚才那句你接得好，节目组会给你加镜头」。',
+      opts:[
+        { l:'顺势加他联系方式', fn:function(){ S.pop=clamp(S.pop+4); S.rep=clamp(S.rep+3); return '他在下一期点了你的名。这行里，人脉比镜头更值钱。'; }},
+        { l:'客气地谢过就走', fn:function(){ S.rep=clamp(S.rep+2); return '你没有留下什么。回去的车上，助理说「你太不会来事了」。'; }}
+      ]},
+    { t:'嘉宾抢了你的梗', b:'全场在笑，镜头却都对着他。你的那句反驳被咽回去了。',
+      opts:[
+        { l:'当场怼回去', fn:function(){ S.pop=clamp(S.pop+5); S.rep=clamp(S.rep-4); return '现场冷了半秒，然后爆笑。后期一定会用这一段。'; }},
+        { l:'笑着把场子让给他', fn:function(){ S.rep=clamp(S.rep+4); S.pop=clamp(S.pop-2); return '工作人员私下说「这孩子懂事」。懂事换不来镜头。'; }}
+      ]}
+  ],
+  bbl: [
+    { t:'弹幕里有人问「你最近还好吗」', b:'那条评论被顶到了最前面，后面跟着三百多个问号。',
+      opts:[
+        { l:'认真回一句真话', fn:function(){ S.rep=clamp(S.rep+5); S.subs+=12; return '你说「最近有点累，但我还在」。截图被转了上万次。'; }},
+        { l:'用玩笑糊过去', fn:function(){ S.pop=clamp(S.pop+2); S.subs+=6; return '你说了个冷笑话。弹幕刷「营业感好重」。'; }}
+      ]},
+    { t:'有人连刷了 99 条相同的话', b:'是黑粉，也是流量。你的直播人数正在往上冲。',
+      opts:[
+        { l:'直接点名回应', fn:function(){ S.pop=clamp(S.pop+6); S.rep=clamp(S.rep-3); S.risk=clamp(S.risk+8); return '切片被做成视频，标题是「当场破防」。'; }},
+        { l:'当作没看到，继续聊天', fn:function(){ S.rep=clamp(S.rep+3); S.subs+=10; return '你稳住了。有人截图说「这才叫职业素养」。'; }}
+      ]}
+  ],
+  fansign: [
+    { t:'第 217 号', b:'她坐下来，第一句话是「我可能以后不来了，我要去上班了」。',
+      opts:[
+        { l:'认真听完她说完', fn:function(){ S.rep=clamp(S.rep+6); return '你在专辑上写了一句「祝你顺利」。她哭了，你也差点。'; }},
+        { l:'快点签，后面还有人', fn:function(){ S.pop=clamp(S.pop+1); S.rep=clamp(S.rep-2); return '她站起来的时候说了句谢谢。你没抬头。'; }}
+      ]},
+    { t:'有人带来了三年前的门票', b:'票根已经泛黄，她说「那天你没唱完就走了」。',
+      opts:[
+        { l:'告诉她那天发生了什么', fn:function(){ S.rep=clamp(S.rep+8); S.risk=clamp(S.risk+4); return '你说了实话。第二天这段话被整理成了长图。'; }},
+        { l:'只说「对不起」', fn:function(){ S.rep=clamp(S.rep+3); return '她点点头，说「我知道」。'; }}
+      ]}
+  ],
+  concert: [
+    { t:'返场之前的三分钟', b:'走廊很静，能听见外面的合唱。有人递来一瓶水，说「你今天状态不对」。',
+      opts:[
+        { l:'实话实说：我撑不住了', fn:function(){ S.sta=clamp(S.sta+12); S.rep=clamp(S.rep+3); return '他们改了曲目。观众没发现，但你记得这份情。'; }},
+        { l:'喝口水就上台', fn:function(){ S.pop=clamp(S.pop+4); S.sta=clamp(S.sta-12); return '最后一句高音你硬顶上去了。台下有人哭了。'; }}
+      ]},
+    { t:'台下有人举着你的旧照片', b:'那张照片是你还没出道的时候，来源不明。',
+      opts:[
+        { l:'假装没看到', fn:function(){ S.risk=clamp(S.risk+10); return '演出很完美。散场时那个人还站在原地。'; }},
+        { l:'让工作人员去沟通', fn:function(){ S.rep=clamp(S.rep+3); S.risk=clamp(S.risk-6); return '工作人员收了那张照片，对方说是「一直留着的」。'; }}
+      ]}
+  ],
+  sponsor: [
+    { t:'品牌方要求你「别提队友」', b:'合同细则里写着一行小字：单人露出，避免团体关联。',
+      opts:[
+        { l:'照合同办', fn:function(){ S.money+=20; S.team=clamp((S.team||50)-10); return '拍摄结束，你一个人站在广告牌前拍了照。'; }},
+        { l:'坚持带上队友', fn:function(){ S.money=Math.max(0,S.money-15); S.team=clamp((S.team||50)+15); S.rep=clamp(S.rep+4); return '品牌方脸色不好看。但队友们知道了这件事。'; }}
+      ]}
+  ],
+  manage: [
+    { t:'室长喝多了', b:'他拍着你的肩说「这一批里我最看好你，也最怕你」。',
+      opts:[
+        { l:'追问「怕我什么」', fn:function(){ S.trust=clamp(S.trust+3); S.risk=clamp(S.risk+5); return '他笑了笑，没说完。第二天他像什么都没发生过。'; }},
+        { l:'把话题岔开', fn:function(){ S.trust=clamp(S.trust+5); return '你敬了他一杯。有些话听一半就够了。'; }}
+      ]}
+  ]
+};
+
+SCENES.cb = [
+  { t:'凌晨的音源曲线', b:'你在后台盯着实时榜，团员们在楼上睡着了。曲线在第三个小时突然往上拐。',
+    opts:[
+      { l:'立刻叫醒他们看', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+8);}); S.grep=clamp(S.grep+3); return '四个人穿着睡衣挤在屏幕前，第一次因为工作而不是玩乐笑成一团。'; }},
+      { l:'自己守着，天亮再说', fn:function(){ S.boss=clamp(S.boss+4); S.grep=clamp(S.grep+2); return '你把截图存了下来。第二天早餐时，你什么都没提。'; }}
+    ]}
+];
+SCENES.tour = [
+  { t:'第四城的酒店大堂', b:'凌晨两点，有粉丝在大堂等了六个小时，只为了递一封信。',
+    opts:[
+      { l:'下楼去收信', fn:function(){ S.grep=clamp(S.grep+5); S.members.forEach(function(m){m.mood=clamp(m.mood+5);}); return '你陪着那个孩子说了五分钟话。她哭着说「谢谢你们来这里」。'; }},
+      { l:'让保安去处理', fn:function(){ S.grep=clamp(S.grep-3); return '信被放在了前台。第二天退房时，那封信还在。'; }}
+    ]}
+];
+SCENES.show = [
+  { t:'镜头只给了三秒', b:'团综剪完，某个成员全场只有三秒正面镜头。他什么都没说，但你看出来了。',
+    opts:[
+      { l:'找节目组争取补镜', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+6);}); S.budget=Math.max(0,S.budget-10); return '补剪的版本多给了两分钟。他一直没问你花了多少。'; }},
+      { l:'告诉他「这次先这样」', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood-8);}); return '他点点头，说「我懂」。这句话比抱怨更让你难受。'; }}
+    ]}
+];
+SCENES.rest = [
+  { t:'难得的休息日', b:'四个人在宿舍打游戏，声音大得像以前练习生时期。',
+    opts:[
+      { l:'加入他们', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+8);}); return '你输了很多把。有人说「哥你今天笑得好多」。'; }},
+      { l:'在房间处理文件', fn:function(){ S.boss=clamp(S.boss+3); S.members.forEach(function(m){m.mood=clamp(m.mood-3);}); return '笑声隔着门传进来。你把文件翻到第三遍。'; }}
+    ]}
+];
+
+function maybeScene(kind){
+  if(!S || S.ended) return false;
+  if(Math.random() > 0.3) return false;
+  var list = SCENES[kind];
+  if(!list || !list.length) return false;
+  S.sceneUsed = S.sceneUsed || [];
+  var idx = -1;
+  for(var i=0;i<list.length;i++){
+    if(S.sceneUsed.indexOf(kind+i) < 0){ idx = i; break; }
+  }
+  if(idx < 0) return false;
+  S.sceneUsed.push(kind + idx);
+  var sc = list[idx];
+  openSheet({ k:'现场 · ' + (S.week+'周'), t: sc.t, b: sc.b, opts: sc.opts });
+  return true;
+}
+
+/* ---------- 连续剧情 1：私生 ---------- */
+var ARC_SASAENG = function(){
+  S.arc.sasaeng = 1;
+  openSheet({ k:'剧情 1/3 · 私生', t:'那辆车跟了你三天',
+    b:'从公司到宿舍，同一辆黑色轿车一直在后面。第三天，它停在了你家楼下，车窗摇下来一半。',
+    opts:[
+      { l:'报警备案', fn:function(){ S.rep=clamp(S.rep+4); S.sta=clamp(S.sta-10); scheduleAfter('sa2',2); return '警察做了笔录。第二天公司门口多了两个陌生人，说是来「支持你」的。'; }},
+      { l:'在直播里当场警告', fn:function(){ S.pop=clamp(S.pop+3); S.rep=clamp(S.rep-4); S.risk=clamp(S.risk+6); scheduleAfter('sa2',2); return '你说了那段话。弹幕一半说心疼，一半说你在作秀。'; }},
+      { l:'假装没看见', fn:function(){ S.pop=clamp(S.pop+2); S.risk=clamp(S.risk+14); scheduleAfter('sa2',2); return '你照常下车、照常微笑。那辆车也照常跟着。'; }}
+    ]});
+};
+
+/* ---------- 连续剧情 2：公司打压 ---------- */
+var ARC_COMPANY = function(){
+  S.arc.company = 1;
+  openSheet({ k:'剧情 1/3 · 公司', t:'这季的行程没有你',
+    b:'回归名单里你的名字排在最末。室长说「先让热度高的顶上」，然后把文件合上了。',
+    opts:[
+      { l:'忍下来，继续练习', fn:function(){ S.trust=clamp(S.trust+6); S.pop=clamp(S.pop-4); scheduleAfter('co2',3); return '你把练习室的钥匙留到最晚。没人知道你在等什么。'; }},
+      { l:'直接找室长谈', fn:function(){ S.trust=clamp(S.trust-5); S.pop=clamp(S.pop+3); scheduleAfter('co2',3); return '谈话不欢而散。但第二天，你的名字被往前挪了一位。'; }},
+      { l:'发一篇小作文', fn:function(){ S.rep=clamp(S.rep+6); S.trust=clamp(S.trust-8); scheduleAfter('co2',3); return '粉丝在超话里刷了一夜。公司发了通稿，说「一切按计划进行」。'; }}
+    ]});
+};
+
+/* ---------- 连续剧情 3：队内 ---------- */
+var ARC_TEAM = function(){
+  S.arc.team = 1;
+  openSheet({ k:'剧情 1/3 · 队内', t:'C 位只有一个',
+    b:'这次编舞把你和他放在同一个位置。彩排结束，他站在原地看着你。',
+    opts:[
+      { l:'主动让出中心位', fn:function(){ S.team=clamp((S.team||50)+10); S.pop=clamp(S.pop-4); scheduleAfter('tm2',2); return '你把位置往后挪了半步。他说「谢谢」，语气有点意外。'; }},
+      { l:'按实力争这一个位置', fn:function(){ S.team=clamp((S.team||50)-10); S.pop=clamp(S.pop+4); scheduleAfter('tm2',2); return '你赢了这一轮。回去的路上，谁都没说话。'; }},
+      { l:'让公司来定', fn:function(){ S.trust=clamp(S.trust+4); S.team=clamp((S.team||50)-12); scheduleAfter('tm2',2); return '室长选了人气高的那个。你在名单后面签了字。'; }}
+    ]});
+};
+
+/* ---------- 连续剧情 4：恋情 ---------- */
+var ARC_LOVE = function(){
+  S.arc.love = 1;
+  openSheet({ k:'剧情 1/3 · 恋爱', t:'越界的第一个晚上',
+    b:'收工后他说「送你回去」，车却开到了江边。你们在车里坐了一个小时，谁也没说话。',
+    opts:[
+      { l:'把手放在他手上', fn:function(){ S.heart=clamp(S.heart+20); S.risk=clamp(S.risk+10); scheduleAfter('lv2',3); return '他的手很凉。你听见自己心跳的声音。'; }},
+      { l:'假装什么都没发生', fn:function(){ S.risk=clamp(S.risk-5); S.team=clamp((S.team||50)-4); scheduleAfter('lv2',3); return '你说了句「明天还要打歌」，然后下车了。'; }}
+    ]});
+};
+
+/* ---------- 剧情后续事件 ---------- */
+var PEND_EV = {
+  sa2: function(){
+    S.arc.sasaeng = 2;
+    openSheet({ k:'剧情 2/3 · 私生', t:'照片被标价了',
+      b:'那张是你从车窗里侧脸的照片，角度很专业。对方开价三万，说「不买我就发」。',
+      opts:[
+        { l:'买断（存款 −30）', fn:function(){ S.money=Math.max(0,S.money-30); S.risk=clamp(S.risk-20); scheduleAfter('sa3',3); return '钱转出去了。你开始怀疑公司里有没有人在卖你的行踪。'; }},
+        { l:'公开对峙，把事闹大', fn:function(){ S.pop=clamp(S.pop+4); S.rep=clamp(S.rep+6); S.risk=clamp(S.risk+8); scheduleAfter('sa3',3); return '你发了一条很硬的话。粉丝开始自发反跟踪。'; }},
+        { l:'搬宿舍，换路线', fn:function(){ S.trust=clamp(S.trust+2); S.risk=clamp(S.risk-10); S.sta=clamp(S.sta-8); scheduleAfter('sa3',3); return '新宿舍没有窗。你睡得比之前好一点。'; }}
+      ]});
+  },
+  sa3: function(){
+    S.arc.sasaeng = 3;
+    openSheet({ k:'剧情 3/3 · 私生', t:'一个记者想做你的专访',
+      b:'她说「不是八卦，是想聊偶像和粉丝的边界」。这个选题很安全，也很危险。',
+      opts:[
+        { l:'接受，讲真话', fn:function(){ S.rep=clamp(S.rep+8); S.pop=clamp(S.pop+5); S.trust=clamp(S.trust-4); return '稿子发了，标题是「我不想再害怕回家」。评论区第一次这么整齐。'; }},
+        { l:'拒绝', fn:function(){ S.rep=clamp(S.rep-2); S.risk=clamp(S.risk-6); return '你说了句「不方便」。那个选题最终写成了别人的故事。'; }},
+        { l:'反问公司为什么不管', fn:function(){ S.trust=clamp(S.trust-6); S.rep=clamp(S.rep+6); S.pop=clamp(S.pop+6); return '你把矛头指回了公司。第二天，你的行程表空了一整周。'; }}
+      ]});
+  },
+  co2: function(){
+    S.arc.company = 2;
+    openSheet({ k:'剧情 2/3 · 公司', t:'「最后一次机会」',
+      b:'室长把一份企划放在你面前：一档整蛊综艺，你要在里面被整得很惨，但会有镜头。',
+      opts:[
+        { l:'接，哪怕是整蛊', fn:function(){ S.pop=clamp(S.pop+8); S.rep=clamp(S.rep-6); scheduleAfter('co3',4); return '你在节目里被泼了一身。热搜词条是「敬业」，也是「可怜」。'; }},
+        { l:'拒绝，宁可没有镜头', fn:function(){ S.trust=clamp(S.trust-6); S.rep=clamp(S.rep+4); scheduleAfter('co3',4); return '你说「我不想靠这个」。室长看了你很久，说「那你自己想办法」。'; }},
+        { l:'谈条件：要一个舞台', fn:function(){ S.trust=clamp(S.trust+3); S.money+=20; scheduleAfter('co3',4); return '你用一档综艺换了一个 SOLO 舞台。这笔账你算得很清楚。'; }}
+      ]});
+  },
+  co3: function(){
+    S.arc.company = 3;
+    var strong = S.tal >= 60;
+    openSheet({ k:'剧情 3/3 · 公司', t:'轮到你证明自己了',
+      b: strong ? '年度舞台的名单里终于有了你。所有人都在看，包括那些不看好你的人。'
+                : '年度舞台的名单里有了你，但你的实力还撑不住这个位置。',
+      opts:[
+        { l:'豁出去，把它当成最后一战', fn:function(){
+            if(strong){ S.pop=clamp(S.pop+12); S.rep=clamp(S.rep+8); S.trust=clamp(S.trust+8); S.money+=40;
+              return '直播信号切到你的时候，全场安静了一秒。第二天，公司把你的名字往前挪了三位。'; }
+            S.pop=clamp(S.pop+4); S.sta=clamp(S.sta-20); S.trust=clamp(S.trust-2);
+            return '你尽力了。有人夸，也有人说「还差得远」。但至少没人再提雪藏。'; }},
+        { l:'稳稳完成，不求出彩', fn:function(){ S.rep=clamp(S.rep+4); S.trust=clamp(S.trust+3); return '没有失误，也没有记忆点。这就是安全区。'; }}
+      ]});
+  },
+  tm2: function(){
+    S.arc.team = 2;
+    openSheet({ k:'剧情 2/3 · 队内', t:'宿舍里没人说话',
+      b:'第三天的冷战。饭桌上四个人，只有筷子碰碗的声音。',
+      opts:[
+        { l:'主动约一顿饭', fn:function(){ S.team=clamp((S.team||50)+15); S.rep=clamp(S.rep+2); S.money-=10; scheduleAfter('tm3',3); return '你点了最贵的那家。吃到一半，有人先笑了。'; }},
+        { l:'继续冷下去', fn:function(){ S.team=clamp((S.team||50)-10); S.pop=clamp(S.pop-2); scheduleAfter('tm3',3); return '你们把宿舍过成了四条平行线。'; }},
+        { l:'在镜头前营业和睦', fn:function(){ S.team=clamp((S.team||50)+5); S.pop=clamp(S.pop+4); S.rep=clamp(S.rep-2); scheduleAfter('tm3',3); return '合照里你们笑得很好。评论区说「这团氛围真好」。'; }}
+      ]});
+  },
+  tm3: function(){
+    S.arc.team = 3;
+    openSheet({ k:'剧情 3/3 · 队内', t:'后台递过来的那瓶水',
+      b:'你嗓子哑到说不出话。有人把水放在你手边，什么都没说就上台了。',
+      opts:[
+        { l:'记下这份情', fn:function(){ S.team=clamp((S.team||50)+10); S.rep=clamp(S.rep+3); return '散场后你说了句谢谢。他说「下次换你给我」。'; }},
+        { l:'保持距离，别太近', fn:function(){ S.team=clamp((S.team||50)-5); S.trust=clamp(S.trust+3); return '你把水喝完，把瓶盖拧好，放回原位。'; }}
+      ]});
+  },
+  lv2: function(){
+    S.arc.love = 2;
+    openSheet({ k:'剧情 2/3 · 恋爱', t:'一张不该存在的合照',
+      b:'你们在后台的合照被人发到了小号上，还没扩散。',
+      opts:[
+        { l:'立刻找源头删掉', fn:function(){ S.money=Math.max(0,S.money-25); S.risk=clamp(S.risk-15); scheduleAfter('lv3',3); return '图删了。但你知道，总会有下一张。'; }},
+        { l:'干脆公开算了', fn:function(){ S.pop=clamp(S.pop+6); S.rep=clamp(S.rep-8); S.risk=clamp(S.risk+30); scheduleAfter('lv3',3); return '你们发了同一天的日落。粉丝开始拼图。'; }},
+        { l:'提出分手', fn:function(){ S.lover=null; S.heart=0; S.risk=clamp(S.risk-20); S.rep=clamp(S.rep+2); return '你说「我们这样不行」。他回了一个「好」，然后没有然后。'; }}
+      ]});
+  },
+  lv3: function(){
+    S.arc.love = 3;
+    openSheet({ k:'剧情 3/3 · 恋爱', t:'公司约你谈话',
+      b:'桌上放着一张照片和一个问题：「你要舞台，还是要他？」',
+      opts:[
+        { l:'要舞台', fn:function(){ S.lover=null; S.heart=0; S.risk=clamp(S.risk-30); S.pop=clamp(S.pop+8); S.trust=clamp(S.trust+8); return '你在解约线前签了字。那天晚上他没有回你消息。'; }},
+        { l:'要他', fn:function(){ S.heart=clamp(S.heart+20); S.risk=clamp(S.risk+10); S.trust=clamp(S.trust-10); return '你说「我可以不做」。室长的表情很奇怪，像是第一次认识你。'; }},
+        { l:'两个都要，赌一把', fn:function(){ S.risk=clamp(S.risk+18); S.pop=clamp(S.pop+6); return '你说「我会处理好」。这句话你自己也不太信。'; }}
+      ]});
+  }
+};
+
+/* ---------- 经纪人线剧情 ---------- */
+var ARC_M_AFFAIR = function(){
+  S.arc.affair = 1;
+  openAffairSheet();
+};
+var ARC_M_EXIT = function(){
+  S.arc.exit = 1;
+  openSheet({ k:'剧情 1/2 · 解约', t:'他把合同放在桌上',
+    b:'「我在这里看不到未来。」他说这话的时候没有看你。',
+    opts:[
+      { l:'加钱留人（预算 −25）', fn:function(){ S.budget=Math.max(0,S.budget-25); S.members.forEach(function(m){m.mood=clamp(m.mood+12);}); scheduleAfter('mx2',3); return '他签了新的补充协议。签字的手很稳。'; }},
+      { l:'拿违约金压他', fn:function(){ S.boss=clamp(S.boss+3); S.members.forEach(function(m){m.mood=clamp(m.mood-10);}); scheduleAfter('mx2',3); return '他留下了，但眼神变了。'; }},
+      { l:'放他走', fn:function(){ if(S.members.length>3){ S.members.shift(); } S.grep=clamp(S.grep-5); S.risk=clamp(S.risk+10); scheduleAfter('mx2',3); return '空出来一个位置。剩下的人，第一次意识到自己也可能走。'; }}
+    ]});
+};
+var ARC_M_CAP = function(){
+  S.arc.cap = 1;
+  openSheet({ k:'剧情 1/2 · 资方', t:'资方要塞一个人进来',
+    b:'对方很客气：「只是给个机会，站位随便安排。」',
+    opts:[
+      { l:'拒绝', fn:function(){ S.boss=clamp(S.boss-6); S.grep=clamp(S.grep+4); return '你得罪了一个不该得罪的人。消息传得很快。'; }},
+      { l:'接受', fn:function(){ S.members.forEach(function(m){ m.pop=clamp(m.pop+2); m.mood=clamp(m.mood-10); }); S.budget+=20; scheduleAfter('mc2',3); return '新人来了，站位挤了。有人开始在练习室算自己的镜头秒数。'; }},
+      { l:'折中：给资源不给位置', fn:function(){ S.budget+=30; S.members.forEach(function(m){m.mood=clamp(m.mood-4);}); scheduleAfter('mc2',3); return '你给了一个综艺席位，保住了队伍的完整。'; }}
+    ]});
+};
+PEND_EV.mx2 = function(){
+  openSheet({ k:'剧情 2/2 · 解约', t:'留下来的那个人，开始不听话了',
+    b:'他开始挑行程、拒绝采访，还带头发言。',
+    opts:[
+      { l:'当众立规矩', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood-10);}); S.boss=clamp(S.boss+5); S.grep=clamp(S.grep+3); return '会议开了四个小时。出门时，没有人替你关门。'; }},
+      { l:'私下单独谈', fn:function(){ var m=S.members[0]; if(m){m.mood=clamp(m.mood+15);} S.risk=clamp(S.risk+5); S.grep=clamp(S.grep+4); return '你们在天台聊到凌晨。他说「其实我不是想走，是想被看见」。'; }}
+    ]});
+};
+PEND_EV.mc2 = function(){
+  openSheet({ k:'剧情 2/2 · 资方', t:'站位表贴出来那天',
+    b:'原成员的站位被挤到了边上。当晚，超话里出现了「不公平」的词条。',
+    opts:[
+      { l:'公开站原成员', fn:function(){ S.boss=clamp(S.boss-5); S.members.forEach(function(m){m.mood=clamp(m.mood+10);}); S.grep=clamp(S.grep+5); return '你发了一条态度很明确的声明。资方的电话十分钟后就来了。'; }},
+      { l:'装作没看见', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood-12);}); S.grep=clamp(S.grep-4); return '热搜压了两天。你在办公室一个人坐着，把站位表看了很多遍。'; }},
+      { l:'重新做一版平衡的站位', fn:function(){ S.members.forEach(function(m){m.mood=clamp(m.mood+6);}); S.budget=Math.max(0,S.budget-15); S.grep=clamp(S.grep+3); return '你把每个人都摆到了能露脸的位置。改版图发出去，评论区安静了。'; }}
+    ]});
+};
+
+/* ---------- 剧情启动检查 ---------- */
+function checkArcStart(){
+  if(!S || S.ended) return false;
+  S.arc = S.arc || {};
+  if(S.route === 'idol'){
+    if(!S.arc.sasaeng && S.week >= 4 && Math.random() < 0.55){ ARC_SASAENG(); return true; }
+    if(!S.arc.company && (S.trust < 48 || S.week >= 12) && Math.random() < 0.5){ ARC_COMPANY(); return true; }
+    if(!S.arc.team && S.week >= 5 && Math.random() < 0.45){ ARC_TEAM(); return true; }
+    if(!S.arc.love && S.lover && Math.random() < 0.5){ ARC_LOVE(); return true; }
+  }else{
+    if(!S.arc.affair && avgMood() < 60 && S.week >= 5 && Math.random() < 0.45){ ARC_M_AFFAIR(); return true; }
+    if(!S.arc.exit && avgMood() <= 48 && S.week >= 6 && Math.random() < 0.45){ ARC_M_EXIT(); return true; }
+    if(!S.arc.cap && S.week >= 8 && Math.random() < 0.4){ ARC_M_CAP(); return true; }
+  }
+  return false;
+}
+
+
+
+
+
+</script>
+</body>
+</html>
